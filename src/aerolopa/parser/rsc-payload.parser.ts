@@ -1,11 +1,11 @@
-import { AerolopaSeatMapApiInput } from '../model/seat-map.types';
+import type { AerolopaSeatMapApiInput } from "../model/seat-map.types";
 
 const CHUNK_PATTERN = /self\.__next_f\.push\(\[1,("(?:[^"\\]|\\.)*")\]\)/g;
 
 const SEAT_MAP_MARKER = '"seats":{';
 
 export function decodeRscPayload(raw: string): string {
-  if (!raw.includes('self.__next_f.push')) {
+  if (!raw.includes("self.__next_f.push")) {
     return raw;
   }
 
@@ -15,7 +15,7 @@ export function decodeRscPayload(raw: string): string {
     chunks.push(JSON.parse(match[1]) as string);
   }
 
-  return chunks.join('');
+  return chunks.join("");
 }
 
 function findObjectStart(payload: string, from: number): number {
@@ -24,12 +24,12 @@ function findObjectStart(payload: string, from: number): number {
   for (let index = from; index >= 0; index--) {
     const character = payload[index];
 
-    if (character === '}') {
+    if (character === "}") {
       depth++;
       continue;
     }
 
-    if (character === '{') {
+    if (character === "{") {
       if (depth === 0) {
         return index;
       }
@@ -51,7 +51,7 @@ function findObjectEnd(payload: string, start: number): number {
     if (inString) {
       if (escaped) {
         escaped = false;
-      } else if (character === '\\') {
+      } else if (character === "\\") {
         escaped = true;
       } else if (character === '"') {
         inString = false;
@@ -61,9 +61,9 @@ function findObjectEnd(payload: string, start: number): number {
 
     if (character === '"') {
       inString = true;
-    } else if (character === '{') {
+    } else if (character === "{") {
       depth++;
-    } else if (character === '}') {
+    } else if (character === "}") {
       depth--;
       if (depth === 0) {
         return index;
@@ -74,9 +74,7 @@ function findObjectEnd(payload: string, start: number): number {
   return -1;
 }
 
-export function extractSeatMapRecord(
-  payload: string,
-): AerolopaSeatMapApiInput | null {
+export function extractSeatMapRecord(payload: string): AerolopaSeatMapApiInput | null {
   const marker = payload.indexOf(SEAT_MAP_MARKER);
   if (marker < 0) {
     return null;

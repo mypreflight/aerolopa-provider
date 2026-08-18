@@ -1,9 +1,9 @@
-import { IncomingMessage, ServerResponse } from 'node:http';
-import { createApp } from './server';
-import { AerolopaClient } from '../aerolopa/aerolopa.client';
-import { AerolopaSeatMap } from '../aerolopa/model/seat-map.types';
+import type { IncomingMessage, ServerResponse } from "node:http";
+import type { AerolopaClient } from "../aerolopa/aerolopa.client";
+import type { AerolopaSeatMap } from "../aerolopa/model/seat-map.types";
+import { createApp } from "./server";
 
-const seatMap = { slug: 'lh-32n', seats: [] } as unknown as AerolopaSeatMap;
+const seatMap = { slug: "lh-32n", seats: [] } as unknown as AerolopaSeatMap;
 
 function fakeClient(): AerolopaClient {
   return {
@@ -19,11 +19,7 @@ type Captured = {
   body: unknown;
 };
 
-async function call(
-  client: AerolopaClient,
-  url: string,
-  method = 'GET',
-): Promise<Captured> {
+async function call(client: AerolopaClient, url: string, method = "GET"): Promise<Captured> {
   const captured: Partial<Captured> = {};
 
   const response = {
@@ -41,52 +37,52 @@ async function call(
   return captured as Captured;
 }
 
-describe('createApp', () => {
-  it('answers the health probe', async () => {
-    const result = await call(fakeClient(), '/health');
+describe("createApp", () => {
+  it("answers the health probe", async () => {
+    const result = await call(fakeClient(), "/health");
 
     expect(result.statusCode).toBe(200);
-    expect(result.body).toEqual({ status: 'ok' });
+    expect(result.body).toEqual({ status: "ok" });
   });
 
-  it('serves a seat map lookup', async () => {
-    const result = await call(fakeClient(), '/seatmap?slug=lh-32n');
+  it("serves a seat map lookup", async () => {
+    const result = await call(fakeClient(), "/seatmap?slug=lh-32n");
 
     expect(result.statusCode).toBe(200);
     expect(result.body).toEqual({ seatMap });
-    expect(result.headers['Content-Type']).toBe('application/json');
+    expect(result.headers["Content-Type"]).toBe("application/json");
   });
 
-  it('accepts lookups on the root path', async () => {
-    const result = await call(fakeClient(), '/?slug=lh-32n');
+  it("accepts lookups on the root path", async () => {
+    const result = await call(fakeClient(), "/?slug=lh-32n");
 
     expect(result.statusCode).toBe(200);
   });
 
-  it('rejects a request with no usable parameters', async () => {
-    const result = await call(fakeClient(), '/seatmap');
+  it("rejects a request with no usable parameters", async () => {
+    const result = await call(fakeClient(), "/seatmap");
 
     expect(result.statusCode).toBe(400);
   });
 
-  it('rejects an unknown path', async () => {
-    const result = await call(fakeClient(), '/admin');
+  it("rejects an unknown path", async () => {
+    const result = await call(fakeClient(), "/admin");
 
     expect(result.statusCode).toBe(404);
-    expect(result.body).toMatchObject({ error: { code: 'NOT_FOUND' } });
+    expect(result.body).toMatchObject({ error: { code: "NOT_FOUND" } });
   });
 
-  it('rejects a non-GET method', async () => {
-    const result = await call(fakeClient(), '/seatmap?slug=lh-32n', 'POST');
+  it("rejects a non-GET method", async () => {
+    const result = await call(fakeClient(), "/seatmap?slug=lh-32n", "POST");
 
     expect(result.statusCode).toBe(405);
   });
 
-  it('passes query parameters through to the handler', async () => {
+  it("passes query parameters through to the handler", async () => {
     const client = fakeClient();
 
-    await call(client, '/seatmap?airline=LO&aircraft=7M8&includeSeatMaps=true');
+    await call(client, "/seatmap?airline=LO&aircraft=7M8&includeSeatMaps=true");
 
-    expect(client.findConfigurations).toHaveBeenCalledWith('LO', '7M8');
+    expect(client.findConfigurations).toHaveBeenCalledWith("LO", "7M8");
   });
 });

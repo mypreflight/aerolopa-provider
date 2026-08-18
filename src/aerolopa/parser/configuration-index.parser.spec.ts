@@ -1,4 +1,4 @@
-import { parseConfigurationIndex } from './configuration-index.parser';
+import { parseConfigurationIndex } from "./configuration-index.parser";
 
 const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
@@ -17,60 +17,57 @@ const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <url><loc>https://www.aerolopa.com/best-business-class/emirates</loc></url>
 </urlset>`;
 
-describe('parseConfigurationIndex', () => {
-  it('keeps only configuration slugs', () => {
+describe("parseConfigurationIndex", () => {
+  it("keeps only configuration slugs", () => {
     const configurations = parseConfigurationIndex(sitemap);
 
     expect(configurations.map((entry) => entry.slug)).toEqual([
-      'lh-359',
-      'lh-320-1',
-      'lh-320-2',
-      'ba-38a-u',
-      'af-77w-leisure',
-      'aa-a321t',
-      'aa-a319s-2',
-      'ke-739er',
+      "lh-359",
+      "lh-320-1",
+      "lh-320-2",
+      "ba-38a-u",
+      "af-77w-leisure",
+      "aa-a321t",
+      "aa-a319s-2",
+      "ke-739er",
     ]);
   });
 
-  it('keeps aircraft codes longer than three characters', () => {
+  it("keeps aircraft codes longer than three characters", () => {
     const configurations = parseConfigurationIndex(sitemap);
 
     expect(configurations).toContainEqual({
-      slug: 'aa-a321t',
-      airlineIata: 'AA',
-      aircraftIata: 'A321T',
+      slug: "aa-a321t",
+      airlineIata: "AA",
+      aircraftIata: "A321T",
     });
     expect(configurations).toContainEqual({
-      slug: 'aa-a319s-2',
-      airlineIata: 'AA',
-      aircraftIata: 'A319S',
+      slug: "aa-a319s-2",
+      airlineIata: "AA",
+      aircraftIata: "A319S",
     });
   });
 
-  it('splits airline and aircraft codes in upper case', () => {
+  it("splits airline and aircraft codes in upper case", () => {
     const configurations = parseConfigurationIndex(sitemap);
 
     expect(configurations[0]).toEqual({
-      slug: 'lh-359',
-      airlineIata: 'LH',
-      aircraftIata: '359',
+      slug: "lh-359",
+      airlineIata: "LH",
+      aircraftIata: "359",
     });
     expect(configurations[4]).toEqual({
-      slug: 'af-77w-leisure',
-      airlineIata: 'AF',
-      aircraftIata: '77W',
+      slug: "af-77w-leisure",
+      airlineIata: "AF",
+      aircraftIata: "77W",
     });
   });
 
-  it('retains every variant of an ambiguous airline and type pair', () => {
+  it("retains every variant of an ambiguous airline and type pair", () => {
     const configurations = parseConfigurationIndex(sitemap).filter(
-      (entry) => entry.airlineIata === 'LH' && entry.aircraftIata === '320',
+      (entry) => entry.airlineIata === "LH" && entry.aircraftIata === "320",
     );
 
-    expect(configurations.map((entry) => entry.slug)).toEqual([
-      'lh-320-1',
-      'lh-320-2',
-    ]);
+    expect(configurations.map((entry) => entry.slug)).toEqual(["lh-320-1", "lh-320-2"]);
   });
 });

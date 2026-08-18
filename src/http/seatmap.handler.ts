@@ -1,12 +1,6 @@
-import { AerolopaClient } from '../aerolopa/aerolopa.client';
-import {
-  AerolopaConfiguration,
-  AerolopaSeatMap,
-} from '../aerolopa/model/seat-map.types';
-import {
-  BadRequestError,
-  ProviderError,
-} from '../aerolopa/model/aerolopa.error';
+import type { AerolopaClient } from "../aerolopa/aerolopa.client";
+import { BadRequestError, ProviderError } from "../aerolopa/model/aerolopa.error";
+import type { AerolopaConfiguration, AerolopaSeatMap } from "../aerolopa/model/seat-map.types";
 
 export type HandlerParams = {
   op?: string;
@@ -30,43 +24,36 @@ export type ResolveResult = {
   seatMaps: AerolopaSeatMap[];
 };
 
-const OPERATIONS = ['seatmap', 'resolve', 'configurations'] as const;
+const OPERATIONS = ["seatmap", "resolve", "configurations"] as const;
 
 type Operation = (typeof OPERATIONS)[number];
 
 function isTruthy(value: string | boolean | undefined): boolean {
-  return value === true || value === 'true' || value === '1';
+  return value === true || value === "true" || value === "1";
 }
 
 function inferOperation(params: HandlerParams): Operation {
   if (params.op) {
     if (!OPERATIONS.includes(params.op as Operation)) {
-      throw new BadRequestError(
-        `Unknown operation "${params.op}". Expected one of ${OPERATIONS.join(', ')}.`,
-      );
+      throw new BadRequestError(`Unknown operation "${params.op}". Expected one of ${OPERATIONS.join(", ")}.`);
     }
     return params.op as Operation;
   }
 
   if (params.slug) {
-    return 'seatmap';
+    return "seatmap";
   }
 
   if (params.airline || params.aircraft) {
-    return 'resolve';
+    return "resolve";
   }
 
-  throw new BadRequestError(
-    'Provide slug, or airline and aircraft, or op=configurations.',
-  );
+  throw new BadRequestError("Provide slug, or airline and aircraft, or op=configurations.");
 }
 
-async function seatMapOperation(
-  client: AerolopaClient,
-  params: HandlerParams,
-): Promise<HandlerResponse> {
+async function seatMapOperation(client: AerolopaClient, params: HandlerParams): Promise<HandlerResponse> {
   if (!params.slug) {
-    throw new BadRequestError('Parameter slug is required for op=seatmap.');
+    throw new BadRequestError("Parameter slug is required for op=seatmap.");
   }
 
   const seatMap = await client.getSeatMap(params.slug);
@@ -74,23 +61,13 @@ async function seatMapOperation(
   return { statusCode: 200, body: { seatMap } };
 }
 
-async function resolveOperation(
-  client: AerolopaClient,
-  params: HandlerParams,
-): Promise<HandlerResponse> {
+async function resolveOperation(client: AerolopaClient, params: HandlerParams): Promise<HandlerResponse> {
   if (!params.airline || !params.aircraft) {
-    throw new BadRequestError(
-      'Parameters airline and aircraft are required for op=resolve.',
-    );
+    throw new BadRequestError("Parameters airline and aircraft are required for op=resolve.");
   }
 
-  const candidates = await client.findConfigurations(
-    params.airline,
-    params.aircraft,
-  );
-  const seatMaps = isTruthy(params.includeSeatMaps)
-    ? await collectSeatMaps(client, candidates)
-    : [];
+  const candidates = await client.findConfigurations(params.airline, params.aircraft);
+  const seatMaps = isTruthy(params.includeSeatMaps) ? await collectSeatMaps(client, candidates) : [];
 
   const result: ResolveResult = {
     airlineIata: params.airline.toUpperCase(),
@@ -117,9 +94,7 @@ async function collectSeatMaps(
   return seatMaps;
 }
 
-async function configurationsOperation(
-  client: AerolopaClient,
-): Promise<HandlerResponse> {
+async function configurationsOperation(client: AerolopaClient): Promise<HandlerResponse> {
   const configurations = await client.listConfigurations();
 
   return {
@@ -128,17 +103,14 @@ async function configurationsOperation(
   };
 }
 
-export async function handleRequest(
-  client: AerolopaClient,
-  params: HandlerParams,
-): Promise<HandlerResponse> {
+export async function handleRequest(client: AerolopaClient, params: HandlerParams): Promise<HandlerResponse> {
   try {
     switch (inferOperation(params)) {
-      case 'seatmap':
+      case "seatmap":
         return await seatMapOperation(client, params);
-      case 'resolve':
+      case "resolve":
         return await resolveOperation(client, params);
-      case 'configurations':
+      case "configurations":
         return await configurationsOperation(client);
     }
   } catch (error) {
@@ -159,8 +131,8 @@ export async function handleRequest(
       statusCode: 500,
       body: {
         error: {
-          code: 'INTERNAL_ERROR',
-          message: 'Seat map lookup failed.',
+          code: "INTERNAL_ERROR",
+          message: "Seat map lookup failed.",
           status: 500,
         },
       },

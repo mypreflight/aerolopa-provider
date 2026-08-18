@@ -1,26 +1,15 @@
-import {
-  AerolopaConfiguration,
-  AerolopaSeatMap,
-  transformSeatMap,
-} from './model/seat-map.types';
-import {
-  decodeRscPayload,
-  extractSeatMapRecord,
-} from './parser/rsc-payload.parser';
-import { parseConfigurationIndex } from './parser/configuration-index.parser';
-import {
-  AerolopaUnavailableError,
-  SeatMapNotFoundError,
-  SeatMapUnreadableError,
-} from './model/aerolopa.error';
-import { fetchWithRetry } from '../core/http/fetch-with-retry';
-import { TtlCache } from '../core/cache/ttl-cache';
+import { TtlCache } from "../core/cache/ttl-cache";
+import { fetchWithRetry } from "../core/http/fetch-with-retry";
+import { AerolopaUnavailableError, SeatMapNotFoundError, SeatMapUnreadableError } from "./model/aerolopa.error";
+import { type AerolopaConfiguration, type AerolopaSeatMap, transformSeatMap } from "./model/seat-map.types";
+import { parseConfigurationIndex } from "./parser/configuration-index.parser";
+import { decodeRscPayload, extractSeatMapRecord } from "./parser/rsc-payload.parser";
 
 const SEAT_MAP_CACHE_TTL_MS = 86_400_000;
 
 const CONFIGURATION_INDEX_CACHE_TTL_MS = 86_400_000;
 
-const CONFIGURATION_INDEX_CACHE_KEY = 'configurations';
+const CONFIGURATION_INDEX_CACHE_KEY = "configurations";
 
 const SEAT_MAP_MARKER = '"seats":{';
 
@@ -38,7 +27,7 @@ export class AerolopaClient {
   private readonly cache: TtlCache;
 
   constructor(options: AerolopaClientOptions) {
-    this.baseUrl = options.baseUrl.replace(/\/+$/, '');
+    this.baseUrl = options.baseUrl.replace(/\/+$/, "");
     this.userAgent = options.userAgent;
     this.cache = options.cache ?? new TtlCache();
   }
@@ -65,71 +54,48 @@ export class AerolopaClient {
   }
 
   async listConfigurations(): Promise<AerolopaConfiguration[]> {
-    const cached = this.cache.get<AerolopaConfiguration[]>(
-      CONFIGURATION_INDEX_CACHE_KEY,
-    );
+    const cached = this.cache.get<AerolopaConfiguration[]>(CONFIGURATION_INDEX_CACHE_KEY);
 
     if (cached) {
       return cached;
     }
 
     const sitemap = await this.request(`${this.baseUrl}/sitemap.xml`, {
-      Accept: 'application/xml',
+      Accept: "application/xml",
     });
     const configurations = parseConfigurationIndex(sitemap);
 
-    this.cache.set(
-      CONFIGURATION_INDEX_CACHE_KEY,
-      configurations,
-      CONFIGURATION_INDEX_CACHE_TTL_MS,
-    );
+    this.cache.set(CONFIGURATION_INDEX_CACHE_KEY, configurations, CONFIGURATION_INDEX_CACHE_TTL_MS);
 
     return configurations;
   }
 
-  async findConfigurations(
-    airlineIata: string,
-    aircraftIata: string,
-  ): Promise<AerolopaConfiguration[]> {
+  async findConfigurations(airlineIata: string, aircraftIata: string): Promise<AerolopaConfiguration[]> {
     const configurations = await this.listConfigurations();
     const airline = airlineIata.toUpperCase();
     const aircraft = aircraftIata.toUpperCase();
 
     return configurations.filter(
-      (configuration) =>
-        configuration.airlineIata === airline &&
-        configuration.aircraftIata === aircraft,
+      (configuration) => configuration.airlineIata === airline && configuration.aircraftIata === aircraft,
     );
   }
 
   private async fetchSeatMapPayload(slug: string): Promise<string> {
-    const payload = await this.request(
-      `${this.baseUrl}/${slug}`,
-      { Accept: 'text/x-component', RSC: '1' },
-      slug,
-    );
+    const payload = await this.request(`${this.baseUrl}/${slug}`, { Accept: "text/x-component", RSC: "1" }, slug);
 
     if (payload.includes(SEAT_MAP_MARKER)) {
       return payload;
     }
 
-    return this.request(
-      `${this.baseUrl}/${slug}`,
-      { Accept: 'text/html' },
-      slug,
-    );
+    return this.request(`${this.baseUrl}/${slug}`, { Accept: "text/html" }, slug);
   }
 
-  private async request(
-    url: string,
-    headers: Record<string, string>,
-    slug?: string,
-  ): Promise<string> {
+  private async request(url: string, headers: Record<string, string>, slug?: string): Promise<string> {
     let response: Response;
 
     try {
       response = await fetchWithRetry(url, {
-        headers: { 'User-Agent': this.userAgent, ...headers },
+        headers: { "User-Agent": this.userAgent, ...headers },
       });
     } catch {
       throw new AerolopaUnavailableError();

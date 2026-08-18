@@ -35,6 +35,8 @@ companion in [flight-tracker-transponder-app][repo-transponder].
 
 [![TypeScript][ts-badge]][ts-url]
 [![Node.js][node-shield]][node-url]
+[![Biome][biome-badge]][biome-url]
+[![Cucumber][cucumber-badge]][cucumber-url]
 [![Docker][docker-badge]][docker-url]
 
 No runtime dependencies at all — the service is the standard library plus compiled TypeScript, which keeps the
@@ -125,10 +127,26 @@ fragment to merge into that app once.
 Everything runs in Docker:
 
 ```shell
-docker compose exec app npm test
-docker compose exec app npm run lint
+docker compose exec app npm test              # unit tests
+docker compose exec app npm run test:functional  # cucumber, against a stubbed AeroLOPA
 docker compose exec app npm run typecheck
-docker compose exec app npm run format:fix
+docker compose exec app npm run lint          # biome check, lint and format in one
+docker compose exec app npm run lint:fix
+```
+
+Linting and formatting are a single Biome pass, configured the same way as
+[flight-tracker-app][repo-app].
+
+### Functional tests
+
+`features/` covers the service end to end over real HTTP, with AeroLOPA replaced by a stub that serves fixture
+payloads. Because the stub records what it was asked for, the suite can assert the things that matter most about a
+scraper: that a repeated lookup is served from cache, that the HTML fallback fires only when the RSC response carries
+no seats, and that a failed lookup is never cached.
+
+```shell
+docker compose exec app npx cucumber-js features/seatmap/resolve.feature
+docker compose exec app npx cucumber-js --name "served from cache"
 ```
 
 ## Contact
@@ -174,3 +192,7 @@ not be used for real-world aviation operations. Seat map diagrams and cabin data
 [docker-badge]: https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white
 [docker-url]: https://www.docker.com
 [docs-deployment]: docs/DEPLOYMENT.md
+[biome-badge]: https://img.shields.io/badge/Biome-60A5FA?style=for-the-badge&logo=biome&logoColor=white
+[biome-url]: https://biomejs.dev
+[cucumber-badge]: https://img.shields.io/badge/Cucumber-23D96C?style=for-the-badge&logo=cucumber&logoColor=white
+[cucumber-url]: https://cucumber.io

@@ -1,24 +1,20 @@
-import { createServer, IncomingMessage, ServerResponse } from 'node:http';
-import { AerolopaClient } from '../aerolopa/aerolopa.client';
-import { handleRequest, HandlerParams } from './seatmap.handler';
-import { openapiDocument } from './openapi.document';
+import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
+import type { AerolopaClient } from "../aerolopa/aerolopa.client";
+import { openapiDocument } from "./openapi.document";
+import { type HandlerParams, handleRequest } from "./seatmap.handler";
 
-const SEAT_MAP_PATH = '/seatmap';
+const SEAT_MAP_PATH = "/seatmap";
 
-const HEALTH_PATH = '/health';
+const HEALTH_PATH = "/health";
 
-const OPENAPI_PATH = '/openapi.json';
+const OPENAPI_PATH = "/openapi.json";
 
-function jsonResponse(
-  response: ServerResponse,
-  statusCode: number,
-  body: unknown,
-): void {
+function jsonResponse(response: ServerResponse, statusCode: number, body: unknown): void {
   const payload = JSON.stringify(body);
 
   response.writeHead(statusCode, {
-    'Content-Type': 'application/json',
-    'Content-Length': Buffer.byteLength(payload),
+    "Content-Type": "application/json",
+    "Content-Length": Buffer.byteLength(payload),
   });
   response.end(payload);
 }
@@ -34,17 +30,14 @@ function paramsOf(url: URL): HandlerParams {
 }
 
 export function createApp(client: AerolopaClient) {
-  return async (
-    request: IncomingMessage,
-    response: ServerResponse,
-  ): Promise<void> => {
-    const url = new URL(request.url ?? '/', 'http://localhost');
+  return async (request: IncomingMessage, response: ServerResponse): Promise<void> => {
+    const url = new URL(request.url ?? "/", "http://localhost");
 
-    if (request.method !== 'GET') {
+    if (request.method !== "GET") {
       jsonResponse(response, 405, {
         error: {
-          code: 'METHOD_NOT_ALLOWED',
-          message: 'Only GET is supported.',
+          code: "METHOD_NOT_ALLOWED",
+          message: "Only GET is supported.",
           status: 405,
         },
       });
@@ -52,7 +45,7 @@ export function createApp(client: AerolopaClient) {
     }
 
     if (url.pathname === HEALTH_PATH) {
-      jsonResponse(response, 200, { status: 'ok' });
+      jsonResponse(response, 200, { status: "ok" });
       return;
     }
 
@@ -61,10 +54,10 @@ export function createApp(client: AerolopaClient) {
       return;
     }
 
-    if (url.pathname !== SEAT_MAP_PATH && url.pathname !== '/') {
+    if (url.pathname !== SEAT_MAP_PATH && url.pathname !== "/") {
       jsonResponse(response, 404, {
         error: {
-          code: 'NOT_FOUND',
+          code: "NOT_FOUND",
           message: `Unknown path ${url.pathname}.`,
           status: 404,
         },

@@ -1,12 +1,12 @@
-export type SeatRating = 'green' | 'yellow' | 'red';
+export type SeatRating = "green" | "yellow" | "red";
 
-export type CabinClass = 'first' | 'business' | 'premium_economy' | 'economy';
+export type CabinClass = "first" | "business" | "premium_economy" | "economy";
 
-export type WindowStatus = 'great' | 'average' | 'poor' | 'none';
+export type WindowStatus = "great" | "average" | "poor" | "none";
 
-export type CommentSentiment = 'good' | 'bad' | 'neutral';
+export type CommentSentiment = "good" | "bad" | "neutral";
 
-export type CommentSeverity = 'minor' | 'moderate' | 'major';
+export type CommentSeverity = "minor" | "moderate" | "major";
 
 export type AerolopaSeatCommentApiInput = {
   slug: string;
@@ -36,7 +36,7 @@ export type AerolopaSeatApiInput = {
   window: {
     status: WindowStatus;
     count: number;
-    side: 'left' | 'right';
+    side: "left" | "right";
   } | null;
 };
 
@@ -142,9 +142,7 @@ export type AerolopaConfiguration = {
   aircraftIata: string;
 };
 
-function transformComment(
-  input: AerolopaSeatCommentApiInput,
-): AerolopaSeatComment {
+function transformComment(input: AerolopaSeatCommentApiInput): AerolopaSeatComment {
   return {
     slug: input.slug,
     comment: input.comment,
@@ -153,10 +151,7 @@ function transformComment(
   };
 }
 
-export function transformSeat(
-  designator: string,
-  input: AerolopaSeatApiInput,
-): AerolopaSeat {
+export function transformSeat(designator: string, input: AerolopaSeatApiInput): AerolopaSeat {
   return {
     designator,
     x: input.x,
@@ -190,9 +185,7 @@ function transformCabin(input: AerolopaCabinApiInput): AerolopaCabin {
   };
 }
 
-export function transformSeatMap(
-  input: AerolopaSeatMapApiInput,
-): AerolopaSeatMap {
+export function transformSeatMap(input: AerolopaSeatMapApiInput): AerolopaSeatMap {
   return {
     slug: input.aircraft_code,
     airlineIata: input.airline_iata,
@@ -213,8 +206,6 @@ export function transformSeatMap(
       svg: input.svg_url,
       seatRects: input.seat_rects_url,
     },
-    seats: Object.entries(input.seats).map(([designator, seat]) =>
-      transformSeat(designator, seat),
-    ),
+    seats: Object.entries(input.seats).map(([designator, seat]) => transformSeat(designator, seat)),
   };
 }
