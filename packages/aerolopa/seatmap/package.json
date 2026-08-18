@@ -1,0 +1,7 @@
+{
+  "name": "aerolopa-seatmap",
+  "version": "1.0.0",
+  "description": "Fetches AeroLOPA seat maps and cabin configurations",
+  "main": "lib/function.js",
+  "license": "Unlicense"
+}

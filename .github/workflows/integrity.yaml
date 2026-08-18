@@ -36,5 +36,5 @@ jobs:
         run: docker compose exec app npm test
       - name: 'Run functional tests'
         run: docker compose exec app npm run test:functional
-      - name: 'Build the production image'
-        run: docker build --target production -t aerolopa-provider:ci .
+      - name: 'Build the deployable function'
+        run: docker compose exec app ./packages/aerolopa/seatmap/build.sh

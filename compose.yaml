@@ -1,6 +1,5 @@
 services:
   app:
-    image: ghcr.io/oskarbarcz/mypreflight-aerolopa-provider
     build:
       context: .
       target: development

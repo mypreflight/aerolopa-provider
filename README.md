@@ -13,7 +13,7 @@ from [AeroLOPA][aerolopa] and serves them on the private network of the platform
 figures, checklists, procedures and data to perform your flight like a real pilots do. You can customize your
 experience, integrate with SimBrief and other tools. Check out our homepage at [mypreflight.io][homepage].
 
-**This module** turns AeroLOPA cabin diagrams into data the platform can render:
+**This module** is a serverless function that turns AeroLOPA cabin diagrams into data the platform can render:
 
 - extracts per-seat geometry, ratings and commentary for around 1600 cabin configurations,
 - resolves an airline and aircraft type to the cabin configurations that match it,
@@ -72,18 +72,23 @@ This app uses docker-based virtualization to run. To set up the project, follow 
 4. Your project should be up and running. Open the browser and go to
    [http://localhost:3001/openapi.json](http://localhost:3001/openapi.json) to see the api documentation.
 
-### Private networking
+### On-demand by design
 
-The service is a component of the `mypreflight` App Platform app. It declares `internal_ports` and no `http_port`, so
-App Platform publishes it only on the app's private network — it has no public URL and therefore carries no API key.
-Callers inside the app reach it by component name:
+This is a DigitalOcean Function. It scales to zero, costs nothing while nobody is asking for a seat map, and starts
+on the first request — which fits a lookup the backend caches for a day and therefore calls rarely.
 
 ```shell
-curl "http://aerolopa-provider:3000/seatmap?slug=lh-359"
+curl -H "X-Require-Whisk-Auth: $SECRET" \
+  "https://faas-fra1-xxxx.doserverless.co/api/v1/web/<namespace>/aerolopa/seatmap?slug=lh-359"
 ```
 
-DigitalOcean Functions were evaluated first and rejected: functions cannot join a VPC and cannot use App Platform
-internal networking, so a function would have been a public endpoint guarded by a shared secret.
+Functions are reachable over public HTTPS and cannot be placed on a private network — they support neither VPCs nor
+App Platform internal routing. The endpoint is therefore guarded by a shared secret, declared as `webSecure` in
+`project.yml` and enforced by the platform before the function is invoked. Nothing internal is exposed: the function
+reads a public website and returns a seat map.
+
+`src/http/server.ts` wraps the same handler in a plain HTTP server. That is what runs locally under Docker and what
+the functional tests drive; production runs `src/function.ts`.
 
 ### API documentation
 
@@ -116,13 +121,12 @@ This project has configured continuous integration and continuous deployment pip
 automatically build, test and deploy the app to the DigitalOcean. You can find the configuration in `.github/workflows`
 directory.
 
-First deployment needs the component adding to the app spec once — see the
+First deployment needs a serverless namespace and a shared secret — see the
 [deployment guide][docs-deployment].
 
-The release pipeline mirrors the backend's: it tags the version, pushes the image to
-`ghcr.io/oskarbarcz/mypreflight-aerolopa-provider`, then deploys the shared `mypreflight` app with
-`digitalocean/app_action`, pinning this component to the released version through `IMAGE_TAG_AEROLOPA_PROVIDER`. The
-action updates only the component named by that variable, so releasing here never disturbs the backend's own image.
+The release pipeline tags the version and deploys with `doctl serverless deploy`. Only the shared secret is injected
+at deploy time; the AeroLOPA host and user agent have defaults in `src/function.ts`, so `project.yml` carries a single
+placeholder.
 
 Everything runs in Docker:
 

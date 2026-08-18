@@ -1,0 +1,14 @@
+targetNamespace: ''
+parameters: {}
+environment: {}
+packages:
+  - name: aerolopa
+    functions:
+      - name: seatmap
+        runtime: 'nodejs:24'
+        main: main
+        web: true
+        webSecure: '${AEROLOPA_FUNCTION_SECRET}'
+        limits:
+          timeout: 60000
+          memory: 512
