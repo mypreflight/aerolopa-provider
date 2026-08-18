@@ -1,0 +1,35 @@
+# Component fragment for the `mypreflight` App Platform app.
+#
+# Merge the `services` entry below into the app spec that already carries the
+# flight-tracker-api component. The component is internal because it declares
+# `internal_ports` and no `http_port` and owns no `routes` entry: App Platform
+# then publishes it only on the app's private LAN, never on the ingress domain.
+#
+#   doctl apps spec get <app-id> > app.yaml
+#   # merge this fragment into app.yaml
+#   doctl apps update <app-id> --spec app.yaml
+
+services:
+  - name: aerolopa-provider
+    image:
+      registry_type: GHCR
+      registry: oskarbarcz
+      repository: mypreflight-aerolopa-provider
+      tag: latest
+    instance_size_slug: apps-s-1vcpu-0.5gb
+    instance_count: 1
+    internal_ports:
+      - 3000
+    health_check:
+      http_path: /health
+      port: 3000
+    envs:
+      - key: PORT
+        scope: RUN_TIME
+        value: '3000'
+      - key: AEROLOPA_API_HOST
+        scope: RUN_TIME
+        value: 'https://www.aerolopa.com'
+      - key: AEROLOPA_USER_AGENT
+        scope: RUN_TIME
+        value: 'MyPreflight/1.0 (+https://mypreflight.io)'
