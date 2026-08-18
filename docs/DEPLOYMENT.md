@@ -1,83 +1,80 @@
 # Deployment
 
-The service is a DigitalOcean Function: it scales to zero, so it costs nothing while idle and starts on the first
-request. Deployment is `doctl serverless deploy`; there is no image, no App Platform component and no app spec to
-merge.
+The seat map lookup is a **functions component of the `mypreflight` App Platform app**, not a separate serverless
+project. App Platform builds it straight from this repository using `project.yml`, so there is no image, no registry
+and nothing for a workflow to push. It runs on demand and scales to zero.
+
+`flight-tracker-api` owns the app spec; this repo only supplies the source.
 
 ## One-time setup
 
-### 1. Create a serverless namespace
-
-In the control panel, go to **Functions** and create a namespace in `fra` (the same region as the `mypreflight` app).
-The namespace is the only infrastructure this repo needs.
-
-### 2. Generate the shared secret
+### 1. Generate the shared secret
 
 ```shell
 openssl rand -hex 32
 ```
 
-Functions have no private-network option — they support neither VPCs nor App Platform internal routing — so the
-endpoint is public HTTPS and this secret is what protects it. App Platform rejects a request without a matching
-`X-Require-Whisk-Auth` header before the function is ever invoked.
+Functions cannot be placed on a private network — they support neither VPCs nor App Platform internal routing — so the
+endpoint is reachable over the app's public ingress and this secret is what protects it. `project.yml` declares it as
+`webSecure`, which makes the platform demand a matching `X-Require-Whisk-Auth` header.
 
-Store the value twice:
+### 2. Add the component
 
-| Repository | Where | Name |
-|---|---|---|
-| this one | Environment `production` secret | `AEROLOPA_FUNCTION_SECRET` |
-| `flight-tracker-api` | App Platform component env var, type `SECRET` | `AEROLOPA_FUNCTION_SECRET` |
-
-Also add `DIGITALOCEAN_ACCESS_TOKEN` to this repository's `production` environment.
-
-### 3. Deploy
-
-Push `main`. The pipeline tags the release, writes the secret into `.env`, connects to the namespace and runs
-`doctl serverless deploy . --remote-build`.
-
-Only the secret is injected at deploy time. `project.yml` carries a single `${AEROLOPA_FUNCTION_SECRET}` placeholder
-because the AeroLOPA host and user agent have defaults in `src/function.ts` — there is nothing else to configure.
-
-To deploy by hand:
+Merge both blocks from `.do/app.component.yaml` into the app spec — the `functions` entry and the `ingress` rule:
 
 ```shell
-doctl serverless namespaces list
-doctl serverless connect
-cp .env.dist .env   # then set AEROLOPA_FUNCTION_SECRET
-doctl serverless deploy . --remote-build
+APP_ID=48acd29a-cbac-42dd-8104-39f475ebee22
+
+doctl apps spec get "$APP_ID" > app.yaml
+# merge the two blocks from .do/app.component.yaml into app.yaml
+doctl apps update "$APP_ID" --spec app.yaml
 ```
 
-### 4. Point the backend at it
+Or in the control panel: open the `mypreflight` app, **Create** → **Create/Attach Component** → **Function**, point it
+at `mypreflight/aerolopa-provider` on `main`, then set the route to `/aerolopa` and add the secret under the
+component's environment variables.
 
-Read the URL back:
+Two things to get right:
+
+- The ingress rule must sit **ahead** of the existing `/` rules. App Platform matches in order, and the catch-all
+  rules for `api.mypreflight.io` and `adsb.mypreflight.io` would otherwise swallow the path.
+- App Platform requires environment variables for a functions component to appear **both** in the component's `envs`
+  and in `project.yml`. They are in both here; keep them in step.
+
+### 3. Point the backend at it
+
+After the first deploy, read the real URL from the component — the path is composed from the ingress route plus the
+package and function names, so confirm it rather than assuming:
 
 ```shell
-doctl serverless functions get aerolopa/seatmap --url
+doctl apps get 48acd29a-cbac-42dd-8104-39f475ebee22 --format DefaultIngress
 ```
 
-Add both variables to the `flight-tracker-api` component, in the control panel under
+The endpoint is that host plus `/aerolopa/aerolopa/seatmap` (route prefix, then package, then function). Verify with
+the checks below before wiring it up, then add to the `flight-tracker-api` component under
 **Settings** → the component → **Environment Variables**:
 
 ```
-AEROLOPA_FUNCTION_URL=https://faas-fra1-xxxx.doserverless.co/api/v1/web/<namespace>/aerolopa/seatmap
+AEROLOPA_FUNCTION_URL=https://<app-host>/aerolopa/aerolopa/seatmap
 AEROLOPA_FUNCTION_SECRET=<the secret>     # type SECRET
 ```
 
 Saving redeploys the app, which is when the backend picks them up.
 
-### 5. Verify
+### 4. Verify
 
 ```shell
-curl -s -H "X-Require-Whisk-Auth: $SECRET" "$URL?slug=lh-32n" | head -c 200
 curl -s -o /dev/null -w '%{http_code}\n' "$URL?slug=lh-32n"
+curl -s -H "X-Require-Whisk-Auth: $SECRET" "$URL?slug=lh-32n" | head -c 200
 ```
 
-The first returns a seat map. The second, with no auth header, must return `401` — if it returns `200`, `webSecure`
-did not take effect and the endpoint is open.
+The first must return **401**. If it returns 200, `webSecure` is not being enforced on the ingress path and the
+endpoint is open to anyone — stop and fix that before pointing the backend at it. The second returns a seat map.
 
 ## Routine releases
 
-Bump `version` in `package.json` and merge to `main`.
+`deploy_on_push: true` means App Platform rebuilds the component whenever `main` moves. The workflow in this repo only
+tags the version and drafts the GitHub release; it does not deploy.
 
 ## Local development
 

@@ -3,6 +3,8 @@ parameters: {}
 environment: {}
 packages:
   - name: aerolopa
+    environment:
+      AEROLOPA_FUNCTION_SECRET: '${AEROLOPA_FUNCTION_SECRET}'
     functions:
       - name: seatmap
         runtime: 'nodejs:24'

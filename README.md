@@ -1,6 +1,6 @@
 <div align="center">
 
-# mypreflight-aerolopa-provider
+# aerolopa-provider
 
 The seat map service of the [**MyPreflight**][homepage] platform. Fetches aircraft seat maps and cabin configurations
 from [AeroLOPA][aerolopa] and serves them on the private network of the platform.
@@ -51,13 +51,13 @@ This app uses docker-based virtualization to run. To set up the project, follow 
 1. Clone the project by running:
 
    ```shell
-   git clone git@github.com:oskarbarcz/mypreflight-aerolopa-provider.git
+   git clone git@github.com:mypreflight/aerolopa-provider.git
    ```
 
 2. Prepare an environment variable file by copying `.env.dist` to `.env` and fill it with your data.
 
    ```shell
-   cd mypreflight-aerolopa-provider
+   cd aerolopa-provider
    cp .env.dist .env
    ```
 
@@ -74,18 +74,19 @@ This app uses docker-based virtualization to run. To set up the project, follow 
 
 ### On-demand by design
 
-This is a DigitalOcean Function. It scales to zero, costs nothing while nobody is asking for a seat map, and starts
-on the first request — which fits a lookup the backend caches for a day and therefore calls rarely.
+This is a functions component of the `mypreflight` App Platform app — the same app the backend runs in, deployed from
+this repository rather than as a separate serverless project. It scales to zero, costs nothing while nobody is asking
+for a seat map, and starts on the first request, which fits a lookup the backend caches for a day and therefore calls
+rarely.
 
 ```shell
 curl -H "X-Require-Whisk-Auth: $SECRET" \
-  "https://faas-fra1-xxxx.doserverless.co/api/v1/web/<namespace>/aerolopa/seatmap?slug=lh-359"
+  "https://<app-host>/aerolopa/aerolopa/seatmap?slug=lh-359"
 ```
 
-Functions are reachable over public HTTPS and cannot be placed on a private network — they support neither VPCs nor
-App Platform internal routing. The endpoint is therefore guarded by a shared secret, declared as `webSecure` in
-`project.yml` and enforced by the platform before the function is invoked. Nothing internal is exposed: the function
-reads a public website and returns a seat map.
+Functions reach the network through the app's public ingress and cannot be placed on a private one — they support
+neither VPCs nor App Platform internal routing. The endpoint is therefore guarded by a shared secret, declared as
+`webSecure` in `project.yml`. Nothing internal is exposed: the function reads a public website and returns a seat map.
 
 `src/http/server.ts` wraps the same handler in a plain HTTP server. That is what runs locally under Docker and what
 the functional tests drive; production runs `src/function.ts`.
@@ -121,12 +122,11 @@ This project has configured continuous integration and continuous deployment pip
 automatically build, test and deploy the app to the DigitalOcean. You can find the configuration in `.github/workflows`
 directory.
 
-First deployment needs a serverless namespace and a shared secret — see the
+First deployment needs the component adding to the app spec and a shared secret — see the
 [deployment guide][docs-deployment].
 
-The release pipeline tags the version and deploys with `doctl serverless deploy`. Only the shared secret is injected
-at deploy time; the AeroLOPA host and user agent have defaults in `src/function.ts`, so `project.yml` carries a single
-placeholder.
+App Platform rebuilds the component whenever `main` moves, so the workflow here only tags the version and drafts the
+GitHub release. There is no image and no registry: App Platform builds from this repository using `project.yml`.
 
 Everything runs in Docker:
 
@@ -186,11 +186,11 @@ not be used for real-world aviation operations. Seat map diagrams and cabin data
 [repo-api]: https://github.com/oskarbarcz/flight-tracker-api
 [repo-app]: https://github.com/oskarbarcz/flight-tracker-app
 [repo-transponder]: https://github.com/oskarbarcz/flight-tracker-transponder-app
-[ci-badge]: https://img.shields.io/github/actions/workflow/status/oskarbarcz/mypreflight-aerolopa-provider/integrity.yaml?branch=main&style=for-the-badge&label=integrity
-[ci-url]: https://github.com/oskarbarcz/mypreflight-aerolopa-provider/actions/workflows/integrity.yaml
-[release-badge]: https://img.shields.io/github/v/release/oskarbarcz/mypreflight-aerolopa-provider?style=for-the-badge
-[release-url]: https://github.com/oskarbarcz/mypreflight-aerolopa-provider/releases/latest
-[license-badge]: https://img.shields.io/github/license/oskarbarcz/mypreflight-aerolopa-provider?style=for-the-badge
+[ci-badge]: https://img.shields.io/github/actions/workflow/status/mypreflight/aerolopa-provider/integrity.yaml?branch=main&style=for-the-badge&label=integrity
+[ci-url]: https://github.com/mypreflight/aerolopa-provider/actions/workflows/integrity.yaml
+[release-badge]: https://img.shields.io/github/v/release/mypreflight/aerolopa-provider?style=for-the-badge
+[release-url]: https://github.com/mypreflight/aerolopa-provider/releases/latest
+[license-badge]: https://img.shields.io/github/license/mypreflight/aerolopa-provider?style=for-the-badge
 [license-url]: https://unlicense.org
 [node-shield]: https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white
 [node-url]: https://nodejs.org

@@ -16,22 +16,3 @@ jobs:
         run: "gh release create $(jq -r '.version' package.json) --generate-notes"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  deploy:
-    needs: tag
-    runs-on: 'ubuntu-latest'
-    environment: 'production'
-    steps:
-      - name: 'Clone repository'
-        uses: actions/checkout@v7
-      - name: 'Install doctl'
-        uses: digitalocean/action-doctl@v2
-        with:
-          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
-      - name: 'Write the deployment secret'
-        run: 'echo "AEROLOPA_FUNCTION_SECRET=${{ secrets.AEROLOPA_FUNCTION_SECRET }}" > .env'
-      - name: 'Connect to the serverless namespace'
-        run: |
-          doctl serverless install
-          doctl serverless connect
-      - name: 'Deploy the function'
-        run: 'doctl serverless deploy . --remote-build'
