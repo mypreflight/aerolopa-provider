@@ -88,14 +88,13 @@ Functions reach the network through the app's public ingress and cannot be place
 neither VPCs nor App Platform internal routing. The endpoint is therefore guarded by a shared secret, declared as
 `webSecure` in `project.yml`. Nothing internal is exposed: the function reads a public website and returns a seat map.
 
-`src/http/server.ts` wraps the same handler in a plain HTTP server. That is what runs locally under Docker and what
-the functional tests drive; production runs `src/function.ts`.
+`src/function.ts` is the entry point DigitalOcean calls. `scripts/dev-server.ts` wraps it in a throwaway HTTP server
+so `docker compose up` gives you something to curl; it is never deployed.
 
 ### API documentation
 
-The contract is an OpenAPI 3.1 document, authored as a typed object in `src/openapi.ts`, served by the service at
-`/openapi.json` and emitted to `openapi.json` with `npm run openapi:emit`. It is the source of truth: the backend
-generates its client types from it rather than restating them.
+The contract is `openapi.json` in the repository root. It is the source of truth: `flight-tracker-api` generates its
+client types from it rather than restating them.
 
 | Request                                                     | Result                                     |
 | ----------------------------------------------------------- | ------------------------------------------ |
@@ -135,8 +134,13 @@ docker compose exec app npm test
 docker compose exec app npm run test:functional
 docker compose exec app npm run typecheck
 docker compose exec app npm run lint
-docker compose exec app npm run lint:fix
+docker compose exec app npm run build
 ```
+
+`npm run build` compiles `src/` into `packages/aerolopa/seatmap/`, the layout DigitalOcean Functions requires — the two
+directory names become the action path, which is why the endpoint ends `/aerolopa/seatmap`. That directory is generated
+output, committed so App Platform can build from the repository, and CI fails if it drifts from `src/`. Nothing under
+`packages/` is edited by hand.
 
 Linting and formatting are a single Biome pass (`npm run lint`), configured the same way as
 [flight-tracker-app][repo-app]. Everything else — the compose setup, the `.env.dist` convention, the Cucumber layout
@@ -145,9 +149,11 @@ and the workflow files — mirrors [flight-tracker-api][repo-api] so the two bac
 ### Functional tests
 
 `features/` follows the same layout as the backend — Gherkin grouped by domain, step definitions in
-`features/_context/` (`rest-api.context.ts` for requests and assertions, `aerolopa.context.ts` for the upstream) and
-shared helpers in `features/_helper/`. It covers the service end to end over real HTTP, with AeroLOPA replaced by a
-stub that serves fixture payloads. Because the stub records what it was asked for, the suite can assert the things that matter most about a
+`features/_context/` (`function.context.ts` for invocation and assertions, `aerolopa.context.ts` for the upstream) and
+shared helpers in `features/_helper/`. The tests call `main()` directly, the way DigitalOcean does, while AeroLOPA is
+replaced by a `mockserver` container driven through its control API — the same mocking approach the backend uses.
+Because the mock records what it was asked for, the suite can assert that a repeated lookup is served from cache, that
+the HTML fallback fires only when the RSC response carries no seats, and that a failed lookup is never cached. Because the stub records what it was asked for, the suite can assert the things that matter most about a
 scraper: that a repeated lookup is served from cache, that the HTML fallback fires only when the RSC response carries
 no seats, and that a failed lookup is never cached.
 
@@ -155,6 +161,8 @@ no seats, and that a failed lookup is never cached.
 docker compose exec app npx cucumber-js features/seatmap/resolve.feature
 docker compose exec app npx cucumber-js --name "served from cache"
 ```
+
+Fixtures for the mock live in `docker/mock/aerolopa.json`, regenerated with `npm run mock:emit`.
 
 ## Contact
 

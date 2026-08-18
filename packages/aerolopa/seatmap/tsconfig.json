@@ -9,8 +9,12 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "rootDir": "src",
+    "outDir": "lib",
+    "declaration": false,
+    "sourceMap": false
   },
-  "include": ["packages/aerolopa/seatmap/src/**/*.ts", "features/**/*.ts", "scripts/**/*.ts"],
-  "exclude": ["node_modules", "**/lib"]
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "lib", "**/*.spec.ts"]
 }

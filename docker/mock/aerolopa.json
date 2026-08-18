@@ -1,0 +1,107 @@
+[
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/sitemap.xml"
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "Content-Type": [
+          "application/xml; charset=utf-8"
+        ]
+      },
+      "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n<url><loc>https://www.aerolopa.com</loc></url>\n<url><loc>https://www.aerolopa.com/airlines</loc></url>\n<url><loc>https://www.aerolopa.com/lh-32n</loc></url>\n<url><loc>https://www.aerolopa.com/lh-321</loc></url>\n<url><loc>https://www.aerolopa.com/lo-7m8-1</loc></url>\n<url><loc>https://www.aerolopa.com/lo-7m8-2</loc></url>\n<url><loc>https://www.aerolopa.com/lo-7m8-3</loc></url>\n<url><loc>https://www.aerolopa.com/aa-a321t</loc></url>\n</urlset>"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/lh-32n"
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "Content-Type": [
+          "text/x-component; charset=utf-8"
+        ]
+      },
+      "body": "2:[\"$\",\"div\",null,{\"aircraft\":{\"aircraft_code\":\"lh-32n\",\"airline_iata\":\"LH\",\"iata_code\":\"32N\",\"standard_iata\":\"32N\",\"aircraft_type\":\"Airbus A320-271N\",\"aircraft_type_displayed\":\"Airbus A320neo\",\"aircraft_manufacturer\":\"Airbus\",\"haul_type\":\"Short Haul\",\"is_dual_deck\":false,\"total_seats\":4,\"last_updated\":\"2025-08-23\",\"seat_counts\":{\"first\":0,\"business\":0,\"premium_economy\":0,\"economy\":4,\"total\":4},\"cabins\":[{\"cabin_type\":\"M\",\"cabin_class\":\"Economy seats\",\"num_seats\":4,\"rows\":\"1 to 2\",\"pitch\":\"30\\\"\",\"width\":\"18\\\"\",\"recline\":\"2\\\"\",\"seat_description\":\"Slimline seats\"}],\"viewBox\":{\"width\":800,\"height\":3970},\"image_url_cdn\":\"https://cdn.example/lh-32n.webp\",\"image_url_neutral_cdn\":\"https://cdn.example/lh-32n.neutral.webp\",\"svg_url\":\"https://maptool.example/lh-32n/svg\",\"seat_rects_url\":\"https://maptool.example/lh-32n/seat-rects\",\"seats\":{\"01A\":{\"designator\":\"01A\",\"x\":100,\"y\":200,\"w\":40,\"h\":60,\"rot\":0,\"reverse\":false,\"rating\":\"green\",\"color\":\"\",\"score\":null,\"comments\":[],\"seat_product\":null,\"seat_product_name\":null,\"cabin\":\"economy\",\"blocked\":false,\"crew_rest\":false,\"bookable\":true,\"window\":{\"status\":\"great\",\"count\":1,\"side\":\"left\"}},\"01B\":{\"designator\":\"01B\",\"x\":100,\"y\":200,\"w\":40,\"h\":60,\"rot\":0,\"reverse\":false,\"rating\":null,\"color\":\"\",\"score\":null,\"comments\":[],\"seat_product\":null,\"seat_product_name\":null,\"cabin\":\"economy\",\"blocked\":false,\"crew_rest\":false,\"bookable\":true,\"window\":null},\"01C\":{\"designator\":\"01C\",\"x\":100,\"y\":200,\"w\":40,\"h\":60,\"rot\":0,\"reverse\":false,\"rating\":\"red\",\"color\":\"#dc3c3c\",\"score\":null,\"comments\":[{\"slug\":\"bathroom_door\",\"comment\":\"Immediately adjacent to lavatory\",\"sentiment\":\"bad\",\"severity\":\"major\"}],\"seat_product\":null,\"seat_product_name\":null,\"cabin\":\"economy\",\"blocked\":false,\"crew_rest\":false,\"bookable\":true,\"window\":null},\"02A\":{\"designator\":\"02A\",\"x\":100,\"y\":200,\"w\":40,\"h\":60,\"rot\":0,\"reverse\":false,\"rating\":null,\"color\":\"\",\"score\":null,\"comments\":[],\"seat_product\":null,\"seat_product_name\":null,\"cabin\":\"economy\",\"blocked\":true,\"crew_rest\":true,\"bookable\":false,\"window\":{\"status\":\"great\",\"count\":1,\"side\":\"left\"}}}}}]"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/lh-321"
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "Content-Type": [
+          "text/x-component; charset=utf-8"
+        ]
+      },
+      "body": "2:[\"$\",\"div\",null,{\"aircraft\":{\"aircraft_code\":\"lh-321\",\"airline_iata\":\"LH\",\"iata_code\":\"321\",\"standard_iata\":\"321\",\"aircraft_type\":\"Airbus A320-271N\",\"aircraft_type_displayed\":\"Airbus A320neo\",\"aircraft_manufacturer\":\"Airbus\",\"haul_type\":\"Short Haul\",\"is_dual_deck\":false,\"total_seats\":4,\"last_updated\":\"2025-08-23\",\"seat_counts\":{\"first\":0,\"business\":0,\"premium_economy\":0,\"economy\":4,\"total\":4},\"cabins\":[{\"cabin_type\":\"M\",\"cabin_class\":\"Economy seats\",\"num_seats\":4,\"rows\":\"1 to 2\",\"pitch\":\"30\\\"\",\"width\":\"18\\\"\",\"recline\":\"2\\\"\",\"seat_description\":\"Slimline seats\"}],\"viewBox\":{\"width\":800,\"height\":3970},\"image_url_cdn\":\"https://cdn.example/lh-321.webp\",\"image_url_neutral_cdn\":\"https://cdn.example/lh-321.neutral.webp\",\"svg_url\":\"https://maptool.example/lh-321/svg\",\"seat_rects_url\":\"https://maptool.example/lh-321/seat-rects\",\"seats\":{\"01A\":{\"designator\":\"01A\",\"x\":100,\"y\":200,\"w\":40,\"h\":60,\"rot\":0,\"reverse\":false,\"rating\":\"green\",\"color\":\"\",\"score\":null,\"comments\":[],\"seat_product\":null,\"seat_product_name\":null,\"cabin\":\"economy\",\"blocked\":false,\"crew_rest\":false,\"bookable\":true,\"window\":{\"status\":\"great\",\"count\":1,\"side\":\"left\"}},\"01B\":{\"designator\":\"01B\",\"x\":100,\"y\":200,\"w\":40,\"h\":60,\"rot\":0,\"reverse\":false,\"rating\":null,\"color\":\"\",\"score\":null,\"comments\":[],\"seat_product\":null,\"seat_product_name\":null,\"cabin\":\"economy\",\"blocked\":false,\"crew_rest\":false,\"bookable\":true,\"window\":null},\"01C\":{\"designator\":\"01C\",\"x\":100,\"y\":200,\"w\":40,\"h\":60,\"rot\":0,\"reverse\":false,\"rating\":\"red\",\"color\":\"#dc3c3c\",\"score\":null,\"comments\":[{\"slug\":\"bathroom_door\",\"comment\":\"Immediately adjacent to lavatory\",\"sentiment\":\"bad\",\"severity\":\"major\"}],\"seat_product\":null,\"seat_product_name\":null,\"cabin\":\"economy\",\"blocked\":false,\"crew_rest\":false,\"bookable\":true,\"window\":null},\"02A\":{\"designator\":\"02A\",\"x\":100,\"y\":200,\"w\":40,\"h\":60,\"rot\":0,\"reverse\":false,\"rating\":null,\"color\":\"\",\"score\":null,\"comments\":[],\"seat_product\":null,\"seat_product_name\":null,\"cabin\":\"economy\",\"blocked\":true,\"crew_rest\":true,\"bookable\":false,\"window\":{\"status\":\"great\",\"count\":1,\"side\":\"left\"}}}}}]"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/lo-7m8-1"
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "Content-Type": [
+          "text/x-component; charset=utf-8"
+        ]
+      },
+      "body": "2:[\"$\",\"div\",null,{\"aircraft\":{\"aircraft_code\":\"lo-7m8-1\",\"airline_iata\":\"LO\",\"iata_code\":\"7M8\",\"standard_iata\":\"7M8\",\"aircraft_type\":\"Airbus A320-271N\",\"aircraft_type_displayed\":\"Airbus A320neo\",\"aircraft_manufacturer\":\"Airbus\",\"haul_type\":\"Short Haul\",\"is_dual_deck\":false,\"total_seats\":4,\"last_updated\":\"2025-08-23\",\"seat_counts\":{\"first\":0,\"business\":0,\"premium_economy\":0,\"economy\":4,\"total\":4},\"cabins\":[{\"cabin_type\":\"M\",\"cabin_class\":\"Economy seats\",\"num_seats\":4,\"rows\":\"1 to 2\",\"pitch\":\"30\\\"\",\"width\":\"18\\\"\",\"recline\":\"2\\\"\",\"seat_description\":\"Slimline seats\"}],\"viewBox\":{\"width\":800,\"height\":3970},\"image_url_cdn\":\"https://cdn.example/lo-7m8-1.webp\",\"image_url_neutral_cdn\":\"https://cdn.example/lo-7m8-1.neutral.webp\",\"svg_url\":\"https://maptool.example/lo-7m8-1/svg\",\"seat_rects_url\":\"https://maptool.example/lo-7m8-1/seat-rects\",\"seats\":{\"01A\":{\"designator\":\"01A\",\"x\":100,\"y\":200,\"w\":40,\"h\":60,\"rot\":0,\"reverse\":false,\"rating\":\"green\",\"color\":\"\",\"score\":null,\"comments\":[],\"seat_product\":null,\"seat_product_name\":null,\"cabin\":\"economy\",\"blocked\":false,\"crew_rest\":false,\"bookable\":true,\"window\":{\"status\":\"great\",\"count\":1,\"side\":\"left\"}},\"01B\":{\"designator\":\"01B\",\"x\":100,\"y\":200,\"w\":40,\"h\":60,\"rot\":0,\"reverse\":false,\"rating\":null,\"color\":\"\",\"score\":null,\"comments\":[],\"seat_product\":null,\"seat_product_name\":null,\"cabin\":\"economy\",\"blocked\":false,\"crew_rest\":false,\"bookable\":true,\"window\":null},\"01C\":{\"designator\":\"01C\",\"x\":100,\"y\":200,\"w\":40,\"h\":60,\"rot\":0,\"reverse\":false,\"rating\":\"red\",\"color\":\"#dc3c3c\",\"score\":null,\"comments\":[{\"slug\":\"bathroom_door\",\"comment\":\"Immediately adjacent to lavatory\",\"sentiment\":\"bad\",\"severity\":\"major\"}],\"seat_product\":null,\"seat_product_name\":null,\"cabin\":\"economy\",\"blocked\":false,\"crew_rest\":false,\"bookable\":true,\"window\":null},\"02A\":{\"designator\":\"02A\",\"x\":100,\"y\":200,\"w\":40,\"h\":60,\"rot\":0,\"reverse\":false,\"rating\":null,\"color\":\"\",\"score\":null,\"comments\":[],\"seat_product\":null,\"seat_product_name\":null,\"cabin\":\"economy\",\"blocked\":true,\"crew_rest\":true,\"bookable\":false,\"window\":{\"status\":\"great\",\"count\":1,\"side\":\"left\"}}}}}]"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/lo-7m8-2"
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "Content-Type": [
+          "text/x-component; charset=utf-8"
+        ]
+      },
+      "body": "2:[\"$\",\"div\",null,{\"aircraft\":{\"aircraft_code\":\"lo-7m8-2\",\"airline_iata\":\"LO\",\"iata_code\":\"7M8\",\"standard_iata\":\"7M8\",\"aircraft_type\":\"Airbus A320-271N\",\"aircraft_type_displayed\":\"Airbus A320neo\",\"aircraft_manufacturer\":\"Airbus\",\"haul_type\":\"Short Haul\",\"is_dual_deck\":false,\"total_seats\":4,\"last_updated\":\"2025-08-23\",\"seat_counts\":{\"first\":0,\"business\":0,\"premium_economy\":0,\"economy\":4,\"total\":4},\"cabins\":[{\"cabin_type\":\"M\",\"cabin_class\":\"Economy seats\",\"num_seats\":4,\"rows\":\"1 to 2\",\"pitch\":\"30\\\"\",\"width\":\"18\\\"\",\"recline\":\"2\\\"\",\"seat_description\":\"Slimline seats\"}],\"viewBox\":{\"width\":800,\"height\":3970},\"image_url_cdn\":\"https://cdn.example/lo-7m8-2.webp\",\"image_url_neutral_cdn\":\"https://cdn.example/lo-7m8-2.neutral.webp\",\"svg_url\":\"https://maptool.example/lo-7m8-2/svg\",\"seat_rects_url\":\"https://maptool.example/lo-7m8-2/seat-rects\",\"seats\":{\"01A\":{\"designator\":\"01A\",\"x\":100,\"y\":200,\"w\":40,\"h\":60,\"rot\":0,\"reverse\":false,\"rating\":\"green\",\"color\":\"\",\"score\":null,\"comments\":[],\"seat_product\":null,\"seat_product_name\":null,\"cabin\":\"economy\",\"blocked\":false,\"crew_rest\":false,\"bookable\":true,\"window\":{\"status\":\"great\",\"count\":1,\"side\":\"left\"}},\"01B\":{\"designator\":\"01B\",\"x\":100,\"y\":200,\"w\":40,\"h\":60,\"rot\":0,\"reverse\":false,\"rating\":null,\"color\":\"\",\"score\":null,\"comments\":[],\"seat_product\":null,\"seat_product_name\":null,\"cabin\":\"economy\",\"blocked\":false,\"crew_rest\":false,\"bookable\":true,\"window\":null},\"01C\":{\"designator\":\"01C\",\"x\":100,\"y\":200,\"w\":40,\"h\":60,\"rot\":0,\"reverse\":false,\"rating\":\"red\",\"color\":\"#dc3c3c\",\"score\":null,\"comments\":[{\"slug\":\"bathroom_door\",\"comment\":\"Immediately adjacent to lavatory\",\"sentiment\":\"bad\",\"severity\":\"major\"}],\"seat_product\":null,\"seat_product_name\":null,\"cabin\":\"economy\",\"blocked\":false,\"crew_rest\":false,\"bookable\":true,\"window\":null},\"02A\":{\"designator\":\"02A\",\"x\":100,\"y\":200,\"w\":40,\"h\":60,\"rot\":0,\"reverse\":false,\"rating\":null,\"color\":\"\",\"score\":null,\"comments\":[],\"seat_product\":null,\"seat_product_name\":null,\"cabin\":\"economy\",\"blocked\":true,\"crew_rest\":true,\"bookable\":false,\"window\":{\"status\":\"great\",\"count\":1,\"side\":\"left\"}}}}}]"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/lo-7m8-3"
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "Content-Type": [
+          "text/x-component; charset=utf-8"
+        ]
+      },
+      "body": "2:[\"$\",\"div\",null,{\"aircraft\":{\"aircraft_code\":\"lo-7m8-3\",\"airline_iata\":\"LO\",\"iata_code\":\"7M8\",\"standard_iata\":\"7M8\",\"aircraft_type\":\"Airbus A320-271N\",\"aircraft_type_displayed\":\"Airbus A320neo\",\"aircraft_manufacturer\":\"Airbus\",\"haul_type\":\"Short Haul\",\"is_dual_deck\":false,\"total_seats\":4,\"last_updated\":\"2025-08-23\",\"seat_counts\":{\"first\":0,\"business\":0,\"premium_economy\":0,\"economy\":4,\"total\":4},\"cabins\":[{\"cabin_type\":\"M\",\"cabin_class\":\"Economy seats\",\"num_seats\":4,\"rows\":\"1 to 2\",\"pitch\":\"30\\\"\",\"width\":\"18\\\"\",\"recline\":\"2\\\"\",\"seat_description\":\"Slimline seats\"}],\"viewBox\":{\"width\":800,\"height\":3970},\"image_url_cdn\":\"https://cdn.example/lo-7m8-3.webp\",\"image_url_neutral_cdn\":\"https://cdn.example/lo-7m8-3.neutral.webp\",\"svg_url\":\"https://maptool.example/lo-7m8-3/svg\",\"seat_rects_url\":\"https://maptool.example/lo-7m8-3/seat-rects\",\"seats\":{\"01A\":{\"designator\":\"01A\",\"x\":100,\"y\":200,\"w\":40,\"h\":60,\"rot\":0,\"reverse\":false,\"rating\":\"green\",\"color\":\"\",\"score\":null,\"comments\":[],\"seat_product\":null,\"seat_product_name\":null,\"cabin\":\"economy\",\"blocked\":false,\"crew_rest\":false,\"bookable\":true,\"window\":{\"status\":\"great\",\"count\":1,\"side\":\"left\"}},\"01B\":{\"designator\":\"01B\",\"x\":100,\"y\":200,\"w\":40,\"h\":60,\"rot\":0,\"reverse\":false,\"rating\":null,\"color\":\"\",\"score\":null,\"comments\":[],\"seat_product\":null,\"seat_product_name\":null,\"cabin\":\"economy\",\"blocked\":false,\"crew_rest\":false,\"bookable\":true,\"window\":null},\"01C\":{\"designator\":\"01C\",\"x\":100,\"y\":200,\"w\":40,\"h\":60,\"rot\":0,\"reverse\":false,\"rating\":\"red\",\"color\":\"#dc3c3c\",\"score\":null,\"comments\":[{\"slug\":\"bathroom_door\",\"comment\":\"Immediately adjacent to lavatory\",\"sentiment\":\"bad\",\"severity\":\"major\"}],\"seat_product\":null,\"seat_product_name\":null,\"cabin\":\"economy\",\"blocked\":false,\"crew_rest\":false,\"bookable\":true,\"window\":null},\"02A\":{\"designator\":\"02A\",\"x\":100,\"y\":200,\"w\":40,\"h\":60,\"rot\":0,\"reverse\":false,\"rating\":null,\"color\":\"\",\"score\":null,\"comments\":[],\"seat_product\":null,\"seat_product_name\":null,\"cabin\":\"economy\",\"blocked\":true,\"crew_rest\":true,\"bookable\":false,\"window\":{\"status\":\"great\",\"count\":1,\"side\":\"left\"}}}}}]"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/aa-a321t"
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "Content-Type": [
+          "text/x-component; charset=utf-8"
+        ]
+      },
+      "body": "2:[\"$\",\"div\",null,{\"aircraft\":{\"aircraft_code\":\"aa-a321t\",\"airline_iata\":\"AA\",\"iata_code\":\"A321T\",\"standard_iata\":\"A321T\",\"aircraft_type\":\"Airbus A320-271N\",\"aircraft_type_displayed\":\"Airbus A320neo\",\"aircraft_manufacturer\":\"Airbus\",\"haul_type\":\"Short Haul\",\"is_dual_deck\":false,\"total_seats\":4,\"last_updated\":\"2025-08-23\",\"seat_counts\":{\"first\":0,\"business\":0,\"premium_economy\":0,\"economy\":4,\"total\":4},\"cabins\":[{\"cabin_type\":\"M\",\"cabin_class\":\"Economy seats\",\"num_seats\":4,\"rows\":\"1 to 2\",\"pitch\":\"30\\\"\",\"width\":\"18\\\"\",\"recline\":\"2\\\"\",\"seat_description\":\"Slimline seats\"}],\"viewBox\":{\"width\":800,\"height\":3970},\"image_url_cdn\":\"https://cdn.example/aa-a321t.webp\",\"image_url_neutral_cdn\":\"https://cdn.example/aa-a321t.neutral.webp\",\"svg_url\":\"https://maptool.example/aa-a321t/svg\",\"seat_rects_url\":\"https://maptool.example/aa-a321t/seat-rects\",\"seats\":{\"01A\":{\"designator\":\"01A\",\"x\":100,\"y\":200,\"w\":40,\"h\":60,\"rot\":0,\"reverse\":false,\"rating\":\"green\",\"color\":\"\",\"score\":null,\"comments\":[],\"seat_product\":null,\"seat_product_name\":null,\"cabin\":\"economy\",\"blocked\":false,\"crew_rest\":false,\"bookable\":true,\"window\":{\"status\":\"great\",\"count\":1,\"side\":\"left\"}},\"01B\":{\"designator\":\"01B\",\"x\":100,\"y\":200,\"w\":40,\"h\":60,\"rot\":0,\"reverse\":false,\"rating\":null,\"color\":\"\",\"score\":null,\"comments\":[],\"seat_product\":null,\"seat_product_name\":null,\"cabin\":\"economy\",\"blocked\":false,\"crew_rest\":false,\"bookable\":true,\"window\":null},\"01C\":{\"designator\":\"01C\",\"x\":100,\"y\":200,\"w\":40,\"h\":60,\"rot\":0,\"reverse\":false,\"rating\":\"red\",\"color\":\"#dc3c3c\",\"score\":null,\"comments\":[{\"slug\":\"bathroom_door\",\"comment\":\"Immediately adjacent to lavatory\",\"sentiment\":\"bad\",\"severity\":\"major\"}],\"seat_product\":null,\"seat_product_name\":null,\"cabin\":\"economy\",\"blocked\":false,\"crew_rest\":false,\"bookable\":true,\"window\":null},\"02A\":{\"designator\":\"02A\",\"x\":100,\"y\":200,\"w\":40,\"h\":60,\"rot\":0,\"reverse\":false,\"rating\":null,\"color\":\"\",\"score\":null,\"comments\":[],\"seat_product\":null,\"seat_product_name\":null,\"cabin\":\"economy\",\"blocked\":true,\"crew_rest\":true,\"bookable\":false,\"window\":{\"status\":\"great\",\"count\":1,\"side\":\"left\"}}}}}]"
+    }
+  }
+]

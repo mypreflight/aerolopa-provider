@@ -5,12 +5,9 @@
   "author": "mypreflight",
   "license": "Unlicense",
   "private": true,
-  "main": "dist/main.js",
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
-    "start": "node dist/main.js",
-    "start:dev": "node --watch -r ts-node/register src/main.ts",
-    "start:prod": "node dist/main.js",
+    "build": "./packages/aerolopa/seatmap/build.sh",
+    "start:dev": "node --watch -r ts-node/register scripts/dev-server.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "biome check",
     "lint:fix": "biome check --write",
@@ -18,7 +15,7 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:functional": "cucumber-js",
-    "openapi:emit": "ts-node scripts/emit-openapi.ts"
+    "mock:emit": "ts-node scripts/emit-mock.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.0",

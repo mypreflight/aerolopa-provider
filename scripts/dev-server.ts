@@ -1,0 +1,30 @@
+import { createServer } from "node:http";
+import { main } from "../packages/aerolopa/seatmap/src/function";
+
+const PORT = Number(process.env.PORT ?? 3000);
+
+createServer((request, response) => {
+  const url = new URL(request.url ?? "/", "http://localhost");
+
+  if (url.pathname === "/health") {
+    response.writeHead(200, { "Content-Type": "application/json" });
+    response.end('{"status":"ok"}');
+    return;
+  }
+
+  main(Object.fromEntries(url.searchParams))
+    .then((result) => {
+      const payload = JSON.stringify(result.body);
+      response.writeHead(result.statusCode, {
+        "Content-Type": "application/json",
+        "Content-Length": Buffer.byteLength(payload),
+      });
+      response.end(payload);
+    })
+    .catch(() => {
+      response.writeHead(500, { "Content-Type": "application/json" });
+      response.end('{"error":{"code":"INTERNAL_ERROR","status":500}}');
+    });
+}).listen(PORT, () => {
+  console.log(`aerolopa-provider dev server on :${PORT}`);
+});

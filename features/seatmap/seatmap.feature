@@ -5,9 +5,8 @@ Feature: Fetching a seat map
 
   Scenario: Fetching a known configuration
     Given AeroLOPA serves the seat map "lh-32n"
-    When I send a "GET" request to "/seatmap?slug=lh-32n"
+    When I invoke the function with "slug=lh-32n"
     Then the response status should be 200
-    And the response header "Content-Type" should be "application/json"
     And the response body should contain:
       """
       {
@@ -55,7 +54,7 @@ Feature: Fetching a seat map
 
   Scenario: Seat geometry and ratings are mapped onto domain names
     Given AeroLOPA serves the seat map "lh-32n"
-    When I send a "GET" request to "/seatmap?slug=lh-32n"
+    When I invoke the function with "slug=lh-32n"
     Then the response status should be 200
     And the response body should contain:
       """
@@ -162,14 +161,14 @@ Feature: Fetching a seat map
 
   Scenario: Falling back to the HTML payload when the RSC response carries no seats
     Given AeroLOPA serves the seat map "lh-32n" only as HTML
-    When I send a "GET" request to "/seatmap?slug=lh-32n"
+    When I invoke the function with "slug=lh-32n"
     Then the response status should be 200
     And the response body should have the property "seatMap.slug"
     And AeroLOPA should have been asked for "lh-32n" 2 times
 
   Scenario: A repeated lookup is served from cache
     Given AeroLOPA serves the seat map "lh-32n"
-    When I send a "GET" request to "/seatmap?slug=lh-32n"
-    And I send a "GET" request to "/seatmap?slug=lh-32n"
+    When I invoke the function with "slug=lh-32n"
+    And I invoke the function with "slug=lh-32n"
     Then the response status should be 200
     And AeroLOPA should have been asked for "lh-32n" 1 time

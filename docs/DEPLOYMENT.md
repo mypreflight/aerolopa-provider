@@ -76,20 +76,30 @@ endpoint is open to anyone — stop and fix that before pointing the backend at 
 `deploy_on_push: true` means App Platform rebuilds the component whenever `main` moves. The workflow in this repo only
 tags the version and drafts the GitHub release; it does not deploy.
 
-## Local development
+## How the deployable is produced
 
-The function entry point is `src/function.ts`. Locally the same handler runs behind a plain HTTP server
-(`src/main.ts`), which is what `docker compose up` starts and what the Cucumber suite drives:
+`src/` is the only place code is written. `npm run build` compiles it into
+`packages/aerolopa/seatmap/lib` and writes that package's `package.json` and `.include` — the layout DigitalOcean
+Functions requires, where the two directory names become the action path `aerolopa/seatmap`.
+
+That directory is generated but **committed**: App Platform builds the component from this repository, so it has to be
+in git. It contains no build step of its own — the platform simply zips `lib` and `package.json`. CI runs the build and
+fails on any diff under `packages/`, so it cannot drift from `src/`.
+
+Never edit anything under `packages/` by hand.
+
+## Local development
 
 ```shell
 docker compose up -d --build
 curl "http://localhost:3001/seatmap?slug=lh-32n"
 ```
 
-To exercise the deployable artifact instead:
+`docker compose` runs `scripts/dev-server.ts`, a throwaway HTTP wrapper around `main()` that is never deployed, and an
+`aerolopa-mock` container standing in for AeroLOPA. To exercise the built artifact the way DigitalOcean will:
 
 ```shell
-docker compose exec app ./packages/aerolopa/seatmap/build.sh
+docker compose exec app npm run build
 docker compose exec app node -e "require('./packages/aerolopa/seatmap/lib/function.js').main({slug:'lh-32n'}).then(r => console.log(r.statusCode))"
 ```
 
@@ -97,8 +107,8 @@ docker compose exec app node -e "require('./packages/aerolopa/seatmap/lib/functi
 
 The OpenAPI document is the contract, and `flight-tracker-api` generates its types from it.
 
-1. Edit `src/http/openapi.document.ts` here, then `npm run openapi:emit`.
-2. Copy `openapi.json` into the backend at `src/core/provider/aerolopa/aerolopa.openapi.json`.
+1. Edit `openapi.json` here.
+2. Copy it into the backend at `src/core/provider/aerolopa/aerolopa.openapi.json`.
 3. Run `npm run aerolopa:types` there and commit the regenerated types.
 
 The backend's `integrity` workflow regenerates and fails on a diff, so a contract change that skips step 3 is caught

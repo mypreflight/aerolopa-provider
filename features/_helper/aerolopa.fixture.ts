@@ -105,3 +105,23 @@ export function sitemapXml(slugs: string[]): string {
     "</urlset>",
   ].join("\n");
 }
+
+export function defaultSeats(): Record<string, unknown> {
+  return {
+    "01A": seat("01A", { rating: "green" }),
+    "01B": seat("01B", { window: null }),
+    "01C": seat("01C", {
+      rating: "red",
+      window: null,
+      comments: [
+        {
+          slug: "bathroom_door",
+          comment: "Immediately adjacent to lavatory",
+          sentiment: "bad",
+          severity: "major",
+        },
+      ],
+    }),
+    "02A": seat("02A", { bookable: false, blocked: true, crewRest: true }),
+  };
+}

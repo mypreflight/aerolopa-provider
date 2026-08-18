@@ -36,5 +36,12 @@ jobs:
         run: docker compose exec app npm test
       - name: 'Run functional tests'
         run: docker compose exec app npm run test:functional
-      - name: 'Build the deployable function'
-        run: docker compose exec app ./packages/aerolopa/seatmap/build.sh
+      - name: 'Build the function the way DigitalOcean does'
+        run: |
+          docker compose exec app sh -c '
+            rm -rf /tmp/slice && mkdir -p /tmp/slice
+            cp -r packages/aerolopa/seatmap /tmp/slice/seatmap
+            rm -rf /tmp/slice/seatmap/lib /tmp/slice/seatmap/node_modules
+            /tmp/slice/seatmap/build.sh
+            test -f /tmp/slice/seatmap/lib/function.js
+          '

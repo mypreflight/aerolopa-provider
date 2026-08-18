@@ -16,3 +16,12 @@ services:
       retries: 3600
       start_period: 3s
       timeout: 500ms
+
+  aerolopa-mock:
+    image: mockserver/mockserver:mockserver-5.15.0
+    ports:
+      - '1180:1080'
+    volumes:
+      - ./docker/mock:/config
+    environment:
+      - MOCKSERVER_INITIALIZATION_JSON_PATH=/config/aerolopa.json

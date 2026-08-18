@@ -5,7 +5,7 @@ Feature: Listing the configuration index
 
   Scenario: Listing every published configuration
     Given AeroLOPA publishes the configurations "lh-32n, lo-7m8-1, aa-a321t"
-    When I send a "GET" request to "/seatmap?op=configurations"
+    When I invoke the function with "op=configurations"
     Then the response status should be 200
     And the response body should contain:
       """
@@ -21,7 +21,7 @@ Feature: Listing the configuration index
 
   Scenario: Pages that are not configurations are left out of the index
     Given AeroLOPA publishes the configurations "lh-32n"
-    When I send a "GET" request to "/seatmap?op=configurations"
+    When I invoke the function with "op=configurations"
     Then the response status should be 200
     And the response body should contain:
       """

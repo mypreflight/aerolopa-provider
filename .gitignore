@@ -1,6 +1,8 @@
 .idea/
 node_modules/
-dist/
 
 .env
 test-data
+
+# build output — DigitalOcean compiles the function from packages/aerolopa/seatmap/src
+packages/**/lib/
