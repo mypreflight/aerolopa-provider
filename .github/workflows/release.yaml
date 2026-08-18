@@ -53,18 +53,14 @@ jobs:
     runs-on: ubuntu-latest
     environment: 'production'
     steps:
-      - name: 'Install doctl'
-        uses: digitalocean/action-doctl@v2
+      - name: 'Clone repository'
+        uses: actions/checkout@v4
+      - name: 'Pin deployed image to the released version'
+        run: 'echo "IMAGE_TAG_AEROLOPA_PROVIDER=$(jq -r ''.version'' package.json)" >> "$GITHUB_ENV"'
+      - name: 'Build and deploy on production'
+        uses: 'digitalocean/app_action/deploy@v2'
         with:
+          app_name: 'mypreflight'
           token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
-      - name: 'Roll the new image out on the shared app'
-        run: |
-          APP_ID=$(doctl apps list --format ID,Spec.Name --no-header \
-            | awk '$2 == "mypreflight" { print $1 }')
-
-          if [ -z "$APP_ID" ]; then
-            echo "App mypreflight not found" >&2
-            exit 1
-          fi
-
-          doctl apps create-deployment "$APP_ID" --wait
+          print_build_logs: true
+          print_deploy_logs: true

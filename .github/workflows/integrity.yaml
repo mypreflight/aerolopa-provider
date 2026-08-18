@@ -25,7 +25,7 @@ jobs:
       - name: 'Checkout repository'
         uses: actions/checkout@v7
       - name: 'Copy environment variables'
-        run: 'cp .env.example .env'
+        run: 'cp .env.dist .env'
       - name: 'Run docker compose environment'
         run: docker compose up -d --build --wait
       - name: 'Run static code analysis'

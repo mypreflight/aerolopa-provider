@@ -54,11 +54,11 @@ This app uses docker-based virtualization to run. To set up the project, follow 
    git clone git@github.com:oskarbarcz/mypreflight-aerolopa-provider.git
    ```
 
-2. Prepare an environment variable file by copying `.env.example` to `.env` and fill it with your data.
+2. Prepare an environment variable file by copying `.env.dist` to `.env` and fill it with your data.
 
    ```shell
    cd mypreflight-aerolopa-provider
-   cp .env.example .env
+   cp .env.dist .env
    ```
 
 3. Use docker compose to set up the environment
@@ -119,28 +119,31 @@ directory.
 First deployment needs the component adding to the app spec once — see the
 [deployment guide][docs-deployment].
 
-The release pipeline pushes the image to the registry and then calls `doctl apps create-deployment`, deliberately
-without applying an app spec: `flight-tracker-api` and this service are components of the same app, and deploying a
-spec from here would overwrite the placeholders the backend owns. `.do/app.component.yaml` holds the component
-fragment to merge into that app once.
+The release pipeline mirrors the backend's: it tags the version, pushes the image to
+`ghcr.io/oskarbarcz/mypreflight-aerolopa-provider`, then deploys the shared `mypreflight` app with
+`digitalocean/app_action`, pinning this component to the released version through `IMAGE_TAG_AEROLOPA_PROVIDER`. The
+action updates only the component named by that variable, so releasing here never disturbs the backend's own image.
 
 Everything runs in Docker:
 
 ```shell
-docker compose exec app npm test              # unit tests
-docker compose exec app npm run test:functional  # cucumber, against a stubbed AeroLOPA
+docker compose exec app npm test
+docker compose exec app npm run test:functional
 docker compose exec app npm run typecheck
-docker compose exec app npm run lint          # biome check, lint and format in one
+docker compose exec app npm run lint
 docker compose exec app npm run lint:fix
 ```
 
-Linting and formatting are a single Biome pass, configured the same way as
-[flight-tracker-app][repo-app].
+Linting and formatting are a single Biome pass (`npm run lint`), configured the same way as
+[flight-tracker-app][repo-app]. Everything else — the compose setup, the `.env.dist` convention, the Cucumber layout
+and the workflow files — mirrors [flight-tracker-api][repo-api] so the two backends stay interchangeable to work on.
 
 ### Functional tests
 
-`features/` covers the service end to end over real HTTP, with AeroLOPA replaced by a stub that serves fixture
-payloads. Because the stub records what it was asked for, the suite can assert the things that matter most about a
+`features/` follows the same layout as the backend — Gherkin grouped by domain, step definitions in
+`features/_context/` (`rest-api.context.ts` for requests and assertions, `aerolopa.context.ts` for the upstream) and
+shared helpers in `features/_helper/`. It covers the service end to end over real HTTP, with AeroLOPA replaced by a
+stub that serves fixture payloads. Because the stub records what it was asked for, the suite can assert the things that matter most about a
 scraper: that a repeated lookup is served from cache, that the HTML fallback fires only when the RSC response carries
 no seats, and that a failed lookup is never cached.
 

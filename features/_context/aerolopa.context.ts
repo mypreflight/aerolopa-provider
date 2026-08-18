@@ -1,6 +1,6 @@
 import { AfterAll, Before, BeforeAll, Given, Then } from "@cucumber/cucumber";
 import expect from "expect";
-import { htmlPayload, rscPayload, seat, seatMapRecord, sitemapXml } from "../_fixture/aerolopa.fixture";
+import { htmlPayload, rscPayload, seat, seatMapRecord, sitemapXml } from "../_helper/aerolopa.fixture";
 import { startService, stopService, upstream } from "../_helper/environment";
 
 const SITEMAP_PATH = "/sitemap.xml";

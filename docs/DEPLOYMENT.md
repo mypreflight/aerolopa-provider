@@ -23,9 +23,8 @@ Do this **before** step 3 — App Platform cannot deploy a component whose image
 | Environment `production` | `DIGITALOCEAN_ACCESS_TOKEN` | a DigitalOcean personal access token with write scope                   |
 | Environment `image`      | —                           | no secrets; the job uses the built-in `GITHUB_TOKEN` to push to ghcr.io |
 
-If the ghcr package is private, App Platform needs a registry credential to pull it — the same one
-`flight-tracker-api` already uses for its own image. Making the package public is the simpler option for a
-public-domain project.
+If the ghcr package is private, add `registry_credentials` to the component, as the `flight-tracker-api` component
+already does. The `adsb-receiver-api` component carries none, so publishing the package is the simpler route.
 
 ### 3. Add the component to the app spec
 
@@ -38,6 +37,11 @@ doctl apps update "$APP_ID" --spec app.yaml
 ```
 
 The component declares `internal_ports: [3000]` and no `http_port`, which is what keeps it off the public ingress.
+
+Keep the component name exactly `aerolopa-provider`. The release pipeline walks the app's components and, for each,
+looks up `IMAGE_TAG_<NAME>` with the name uppercased and dashes turned into underscores. The lookup runs in that
+direction, so a component named anything else simply never matches `IMAGE_TAG_AEROLOPA_PROVIDER` — the deployment
+still succeeds, and it silently ships the previously deployed image.
 
 ### 4. Point the backend at it
 
@@ -63,9 +67,13 @@ that is the point.
 
 ## Routine releases
 
-Bump `version` in `package.json` and merge to `main`. The pipeline tags the release, pushes the image and calls
-`doctl apps create-deployment`, which redeploys the stored spec — it never applies a spec of its own, so it cannot
-disturb the backend component.
+Bump `version` in `package.json` and merge to `main`. The pipeline tags the release, pushes the image and deploys the
+`mypreflight` app with `digitalocean/app_action`, exporting `IMAGE_TAG_AEROLOPA_PROVIDER` first.
+
+That variable is the whole mechanism: with the backwards-compatible `app_name` input, the action rewrites the `tag`
+field of the component whose name matches the variable suffix (`aerolopa-provider` uppercased, dashes to
+underscores). Components with no matching variable keep the tag already in the live spec, which is why this repo and
+`flight-tracker-api` can both deploy the same app without treading on each other.
 
 ## Changing the response contract
 
