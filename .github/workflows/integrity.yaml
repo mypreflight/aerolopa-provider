@@ -15,12 +15,20 @@ jobs:
         uses: gi-org-pl/check-crlf-action@v1
       - name: 'Check for file permission changes'
         uses: gi-org-pl/check-file-permissions-action@v1
-      - name: 'Check app version is unique'
+      - name: 'Check seatmap version is unique'
         uses: gi-org-pl/check-version-action@v1
         with:
           version: "$(jq -r '.version' packages/aerolopa/seatmap/package.json)"
+      - name: 'Check layouts version is unique'
+        uses: gi-org-pl/check-version-action@v1
+        with:
+          version: "$(jq -r '.version' packages/aerolopa/layouts/package.json)"
   code:
     runs-on: 'ubuntu-latest'
+    strategy:
+      fail-fast: false
+      matrix:
+        function: ['seatmap', 'layouts']
     steps:
       - name: 'Checkout repository'
         uses: actions/checkout@v7
@@ -29,21 +37,21 @@ jobs:
       - name: 'Run docker compose environment'
         run: docker compose up -d --build --wait
       - name: 'Run static code analysis'
-        run: docker compose exec app npm run lint
+        run: docker compose exec ${{ matrix.function }} npm run lint
       - name: 'Run type check'
-        run: docker compose exec app npm run typecheck
+        run: docker compose exec ${{ matrix.function }} npm run typecheck
       - name: 'Run unit tests'
-        run: docker compose exec app npm test
+        run: docker compose exec ${{ matrix.function }} npm test
       - name: 'Run functional tests'
-        run: docker compose exec app npm run test:functional
+        run: docker compose exec ${{ matrix.function }} npm run test:functional
       - name: 'Build the function the way DigitalOcean does'
         run: |
-          docker compose exec app sh -c '
+          docker compose exec ${{ matrix.function }} sh -c '
             rm -rf /tmp/slice && mkdir -p /tmp/slice
-            cp -r /app/packages/aerolopa/seatmap /tmp/slice/seatmap
-            rm -rf /tmp/slice/seatmap/lib /tmp/slice/seatmap/node_modules
-            /tmp/slice/seatmap/build.sh
-            test -f /tmp/slice/seatmap/lib/function.js
-            test ! -e /tmp/slice/seatmap/node_modules/jest
-            test ! -e /tmp/slice/seatmap/node_modules/@biomejs
+            cp -r /app/packages/aerolopa/${{ matrix.function }} /tmp/slice/${{ matrix.function }}
+            rm -rf /tmp/slice/${{ matrix.function }}/lib /tmp/slice/${{ matrix.function }}/node_modules
+            /tmp/slice/${{ matrix.function }}/build.sh
+            test -f /tmp/slice/${{ matrix.function }}/lib/function.js
+            test ! -e /tmp/slice/${{ matrix.function }}/node_modules/jest
+            test ! -e /tmp/slice/${{ matrix.function }}/node_modules/@biomejs
           '

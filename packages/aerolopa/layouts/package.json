@@ -1,7 +1,7 @@
 {
-  "name": "aerolopa-seatmap",
+  "name": "aerolopa-layouts",
   "version": "1.2.0",
-  "description": "AeroLOPA seat map fetcher, deployed as a DigitalOcean Function",
+  "description": "AeroLOPA layout index, deployed as a DigitalOcean Function",
   "author": "mypreflight",
   "license": "Unlicense",
   "main": "lib/function.js",
@@ -12,8 +12,7 @@
     "lint": "biome check",
     "lint:fix": "biome check --write",
     "test": "jest",
-    "test:functional": "TS_NODE_PROJECT=tsconfig.tests.json cucumber-js --require-module ts-node/register/transpile-only --require 'features/_context/**/*.ts' --fail-fast",
-    "mock:emit": "TS_NODE_PROJECT=tsconfig.tests.json ts-node scripts/emit-mock.ts"
+    "test:functional": "TS_NODE_PROJECT=tsconfig.tests.json cucumber-js --require-module ts-node/register/transpile-only --require 'features/_context/**/*.ts' --fail-fast"
   },
   "dependencies": {
     "@types/node": "^24.0.0",
