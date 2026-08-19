@@ -1,5 +1,5 @@
 services:
-  app:
+  seatmap:
     build:
       context: .
       target: development
@@ -18,6 +18,29 @@ services:
       start_period: 3s
       timeout: 500ms
 
+  layouts:
+    build:
+      context: .
+      target: development
+    working_dir: /app/packages/aerolopa/layouts
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+      # A named volume, not ./node_modules: both packages declare the same
+      # dependencies, and two containers installing into one host directory race.
+      # The IDE still resolves layouts' imports from the root ./node_modules the
+      # seatmap service populates, because node walks the tree upwards.
+      - layouts-node-modules:/app/packages/aerolopa/layouts/node_modules
+    ports:
+      - '3002:3000'
+    healthcheck:
+      test: 'curl --fail http://localhost:3000/health || exit 1'
+      interval: 500ms
+      retries: 3600
+      start_period: 3s
+      timeout: 500ms
+
   aerolopa-mock:
     image: mockserver/mockserver:mockserver-5.15.0
     ports:
@@ -26,3 +49,6 @@ services:
       - ./docker/mock:/config
     environment:
       - MOCKSERVER_INITIALIZATION_JSON_PATH=/config/aerolopa.json
+
+volumes:
+  layouts-node-modules:
