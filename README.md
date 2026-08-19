@@ -1,9 +1,9 @@
 <div align="center">
 
-# mypreflight-aerolopa-provider
+# aerolopa-provider
 
-The seat map service of the [**MyPreflight**][homepage] platform. Fetches aircraft seat maps and cabin configurations
-from [AeroLOPA][aerolopa] and serves them on the private network of the platform.
+The seat map function of the [**MyPreflight**][homepage] platform. Fetches aircraft seat maps and cabin
+configurations from [AeroLOPA][aerolopa], on demand, as a component of the platform's App Platform app.
 
 </div>
 
@@ -13,7 +13,7 @@ from [AeroLOPA][aerolopa] and serves them on the private network of the platform
 figures, checklists, procedures and data to perform your flight like a real pilots do. You can customize your
 experience, integrate with SimBrief and other tools. Check out our homepage at [mypreflight.io][homepage].
 
-**This module** turns AeroLOPA cabin diagrams into data the platform can render:
+**This module** is a serverless function that turns AeroLOPA cabin diagrams into data the platform can render:
 
 - extracts per-seat geometry, ratings and commentary for around 1600 cabin configurations,
 - resolves an airline and aircraft type to the cabin configurations that match it,
@@ -35,10 +35,12 @@ companion in [flight-tracker-transponder-app][repo-transponder].
 
 [![TypeScript][ts-badge]][ts-url]
 [![Node.js][node-shield]][node-url]
+[![Biome][biome-badge]][biome-url]
+[![Cucumber][cucumber-badge]][cucumber-url]
 [![Docker][docker-badge]][docker-url]
 
-No runtime dependencies at all — the service is the standard library plus compiled TypeScript, which keeps the
-deployed image small and the cold start immediate.
+No runtime dependencies at all — the function is the standard library plus compiled TypeScript, which keeps the
+deployed artifact small and the cold start immediate.
 
 ## Getting started
 
@@ -49,14 +51,14 @@ This app uses docker-based virtualization to run. To set up the project, follow 
 1. Clone the project by running:
 
    ```shell
-   git clone git@github.com:oskarbarcz/mypreflight-aerolopa-provider.git
+   git clone git@github.com:mypreflight/aerolopa-provider.git
    ```
 
-2. Prepare an environment variable file by copying `.env.example` to `.env` and fill it with your data.
+2. Prepare an environment variable file by copying `.env.dist` to `.env` and fill it with your data.
 
    ```shell
-   cd mypreflight-aerolopa-provider
-   cp .env.example .env
+   cd aerolopa-provider
+   cp .env.dist .env
    ```
 
 3. Use docker compose to set up the environment
@@ -67,38 +69,50 @@ This app uses docker-based virtualization to run. To set up the project, follow 
 
    Packages will be installed automatically and the service starts in watch mode.
 
-4. Your project should be up and running. Open the browser and go to
-   [http://localhost:3001/openapi.json](http://localhost:3001/openapi.json) to see the api documentation.
+4. Your project should be up and running. `docker compose` also starts an `aerolopa-mock` container, so the
+   function answers without touching the real site:
 
-### Private networking
+   ```shell
+   curl "http://localhost:3001/?slug=lh-32n"
+   ```
 
-The service is a component of the `mypreflight` App Platform app. It declares `internal_ports` and no `http_port`, so
-App Platform publishes it only on the app's private network — it has no public URL and therefore carries no API key.
-Callers inside the app reach it by component name:
+### On-demand by design
+
+This is a functions component of the `mypreflight` App Platform app — the same app the backend runs in, deployed from
+this repository rather than as a separate serverless project. It scales to zero, costs nothing while nobody is asking
+for a seat map, and starts on the first request, which fits a lookup the backend caches for a day and therefore calls
+rarely.
 
 ```shell
-curl "http://aerolopa-provider:3000/seatmap?slug=lh-359"
+curl -H "X-Require-Whisk-Auth: $SECRET" \
+  "https://<app-host>/aerolopa/aerolopa/seatmap?slug=lh-359"
 ```
 
-DigitalOcean Functions were evaluated first and rejected: functions cannot join a VPC and cannot use App Platform
-internal networking, so a function would have been a public endpoint guarded by a shared secret.
+Functions reach the network through the app's public ingress and cannot be placed on a private one — they support
+neither VPCs nor App Platform internal routing. The endpoint is therefore guarded by a shared secret, declared as
+`webSecure` in `project.yml`. Nothing internal is exposed: the function reads a public website and returns a seat map.
+
+`packages/aerolopa/seatmap/src/function.ts` is the entry point DigitalOcean calls. `scripts/dev-server.ts` wraps it in
+a throwaway HTTP server so `docker compose up` gives you something to curl; it is never deployed.
 
 ### API documentation
 
-The contract is an OpenAPI 3.1 document, authored as a typed object in `src/openapi.ts`, served by the service at
-`/openapi.json` and emitted to `openapi.json` with `npm run openapi:emit`. It is the source of truth: the backend
-generates its client types from it rather than restating them.
+The contract is `openapi.json` in the repository root — one operation, `GET /aerolopa/seatmap`, taking the arguments
+below and requiring the `X-Require-Whisk-Auth` header. It is the source of truth: `flight-tracker-api` generates its
+client types from it rather than restating them.
 
-| Request                                                     | Result                                     |
-| ----------------------------------------------------------- | ------------------------------------------ |
-| `GET /health`                                               | liveness probe                             |
-| `GET /openapi.json`                                         | this service's OpenAPI document            |
-| `GET /seatmap?slug=lh-359`                                  | one seat map                               |
-| `GET /seatmap?airline=LH&aircraft=32N`                      | candidate configurations, with `ambiguous` |
-| `GET /seatmap?airline=LO&aircraft=7M8&includeSeatMaps=true` | candidates and every matching seat map     |
-| `GET /seatmap?op=configurations`                            | the full configuration index               |
+The function takes arguments, not paths — as query parameters over HTTP, or as the `args` object when invoked
+through the DigitalOcean API.
 
-Errors answer `{ "error": { "code", "message", "status" } }` with a matching HTTP status.
+| Arguments                                    | Result                                     |
+| -------------------------------------------- | ------------------------------------------ |
+| `slug=lh-359`                                | one seat map                               |
+| `airline=LH&aircraft=32N`                    | candidate configurations, with `ambiguous` |
+| `airline=LO&aircraft=7M8&includeSeatMaps=true` | candidates and every matching seat map   |
+| `op=configurations`                          | the full configuration index               |
+
+Errors answer `{ "error": { "code", "message", "status" } }` with a matching status: `400` bad arguments, `404` unknown
+configuration, `502` AeroLOPA unreachable or unparseable, `500` anything else.
 
 ### Configurations are candidates, not answers
 
@@ -114,21 +128,20 @@ This project has configured continuous integration and continuous deployment pip
 automatically build, test and deploy the app to the DigitalOcean. You can find the configuration in `.github/workflows`
 directory.
 
-First deployment needs the component adding to the app spec once — see the
+First deployment needs the component adding to the app spec and a shared secret — see the
 [deployment guide][docs-deployment].
 
-The release pipeline pushes the image to the registry and then calls `doctl apps create-deployment`, deliberately
-without applying an app spec: `flight-tracker-api` and this service are components of the same app, and deploying a
-spec from here would overwrite the placeholders the backend owns. `.do/app.component.yaml` holds the component
-fragment to merge into that app once.
+App Platform rebuilds the component whenever `main` moves, so the workflow here only tags the version and drafts the
+GitHub release. There is no image and no registry: App Platform builds from this repository using `project.yml`.
 
 Everything runs in Docker:
 
 ```shell
 docker compose exec app npm test
-docker compose exec app npm run lint
+docker compose exec app npm run test:functional
 docker compose exec app npm run typecheck
-docker compose exec app npm run format:fix
+docker compose exec app npm run lint
+docker compose exec app npm run build
 ```
 
 ## Contact
@@ -161,11 +174,11 @@ not be used for real-world aviation operations. Seat map diagrams and cabin data
 [repo-api]: https://github.com/oskarbarcz/flight-tracker-api
 [repo-app]: https://github.com/oskarbarcz/flight-tracker-app
 [repo-transponder]: https://github.com/oskarbarcz/flight-tracker-transponder-app
-[ci-badge]: https://img.shields.io/github/actions/workflow/status/oskarbarcz/mypreflight-aerolopa-provider/integrity.yaml?branch=main&style=for-the-badge&label=integrity
-[ci-url]: https://github.com/oskarbarcz/mypreflight-aerolopa-provider/actions/workflows/integrity.yaml
-[release-badge]: https://img.shields.io/github/v/release/oskarbarcz/mypreflight-aerolopa-provider?style=for-the-badge
-[release-url]: https://github.com/oskarbarcz/mypreflight-aerolopa-provider/releases/latest
-[license-badge]: https://img.shields.io/github/license/oskarbarcz/mypreflight-aerolopa-provider?style=for-the-badge
+[ci-badge]: https://img.shields.io/github/actions/workflow/status/mypreflight/aerolopa-provider/integrity.yaml?branch=main&style=for-the-badge&label=integrity
+[ci-url]: https://github.com/mypreflight/aerolopa-provider/actions/workflows/integrity.yaml
+[release-badge]: https://img.shields.io/github/v/release/mypreflight/aerolopa-provider?style=for-the-badge
+[release-url]: https://github.com/mypreflight/aerolopa-provider/releases/latest
+[license-badge]: https://img.shields.io/github/license/mypreflight/aerolopa-provider?style=for-the-badge
 [license-url]: https://unlicense.org
 [node-shield]: https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white
 [node-url]: https://nodejs.org
@@ -174,3 +187,7 @@ not be used for real-world aviation operations. Seat map diagrams and cabin data
 [docker-badge]: https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white
 [docker-url]: https://www.docker.com
 [docs-deployment]: docs/DEPLOYMENT.md
+[biome-badge]: https://img.shields.io/badge/Biome-60A5FA?style=for-the-badge&logo=biome&logoColor=white
+[biome-url]: https://biomejs.dev
+[cucumber-badge]: https://img.shields.io/badge/Cucumber-23D96C?style=for-the-badge&logo=cucumber&logoColor=white
+[cucumber-url]: https://cucumber.io

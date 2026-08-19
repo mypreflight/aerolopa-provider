@@ -3,11 +3,26 @@ services:
     build:
       context: .
       target: development
-    volumes:
-      - .:/app
-      - ./node_modules:/app/node_modules
+    working_dir: /app/packages/aerolopa/seatmap
     env_file:
       - .env
+    volumes:
+      - .:/app
+      - ./node_modules:/app/packages/aerolopa/seatmap/node_modules
     ports:
       - '3001:3000'
-    tty: true
+    healthcheck:
+      test: 'curl --fail http://localhost:3000/health || exit 1'
+      interval: 500ms
+      retries: 3600
+      start_period: 3s
+      timeout: 500ms
+
+  aerolopa-mock:
+    image: mockserver/mockserver:mockserver-5.15.0
+    ports:
+      - '1180:1080'
+    volumes:
+      - ./docker/mock:/config
+    environment:
+      - MOCKSERVER_INITIALIZATION_JSON_PATH=/config/aerolopa.json

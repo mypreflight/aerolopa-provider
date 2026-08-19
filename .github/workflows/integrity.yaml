@@ -18,23 +18,32 @@ jobs:
       - name: 'Check app version is unique'
         uses: gi-org-pl/check-version-action@v1
         with:
-          version: "$(jq -r '.version' package.json)"
+          version: "$(jq -r '.version' packages/aerolopa/seatmap/package.json)"
   code:
     runs-on: 'ubuntu-latest'
     steps:
       - name: 'Checkout repository'
         uses: actions/checkout@v7
       - name: 'Copy environment variables'
-        run: 'cp .env.example .env'
+        run: 'cp .env.dist .env'
       - name: 'Run docker compose environment'
         run: docker compose up -d --build --wait
-      - name: 'Run code formatting check'
-        run: docker compose exec app npm run format
       - name: 'Run static code analysis'
         run: docker compose exec app npm run lint
       - name: 'Run type check'
         run: docker compose exec app npm run typecheck
       - name: 'Run unit tests'
         run: docker compose exec app npm test
-      - name: 'Build the production image'
-        run: docker build --target production -t aerolopa-provider:ci .
+      - name: 'Run functional tests'
+        run: docker compose exec app npm run test:functional
+      - name: 'Build the function the way DigitalOcean does'
+        run: |
+          docker compose exec app sh -c '
+            rm -rf /tmp/slice && mkdir -p /tmp/slice
+            cp -r /app/packages/aerolopa/seatmap /tmp/slice/seatmap
+            rm -rf /tmp/slice/seatmap/lib /tmp/slice/seatmap/node_modules
+            /tmp/slice/seatmap/build.sh
+            test -f /tmp/slice/seatmap/lib/function.js
+            test ! -e /tmp/slice/seatmap/node_modules/jest
+            test ! -e /tmp/slice/seatmap/node_modules/@biomejs
+          '
