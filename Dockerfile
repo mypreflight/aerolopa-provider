@@ -5,4 +5,4 @@ RUN npm install -g npm@12 && npm cache clean --force
 FROM alpine-node-base AS development
 WORKDIR /app
 COPY --chown=node:node . .
-ENTRYPOINT ["./docker/dev/entrypoint"]
+ENTRYPOINT ["/app/docker/dev/entrypoint"]

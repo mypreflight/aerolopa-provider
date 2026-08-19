@@ -1,6 +1,6 @@
 import { Then, When } from "@cucumber/cucumber";
 import expect from "expect";
-import { main } from "../../packages/aerolopa/seatmap/src/function";
+import { main } from "../../src/function";
 import { deepCompare } from "../_helper/deep-compare";
 
 let statusCode: number;

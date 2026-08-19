@@ -18,7 +18,7 @@ jobs:
       - name: 'Check app version is unique'
         uses: gi-org-pl/check-version-action@v1
         with:
-          version: "$(jq -r '.version' package.json)"
+          version: "$(jq -r '.version' packages/aerolopa/seatmap/package.json)"
   code:
     runs-on: 'ubuntu-latest'
     steps:
@@ -40,8 +40,10 @@ jobs:
         run: |
           docker compose exec app sh -c '
             rm -rf /tmp/slice && mkdir -p /tmp/slice
-            cp -r packages/aerolopa/seatmap /tmp/slice/seatmap
+            cp -r /app/packages/aerolopa/seatmap /tmp/slice/seatmap
             rm -rf /tmp/slice/seatmap/lib /tmp/slice/seatmap/node_modules
             /tmp/slice/seatmap/build.sh
             test -f /tmp/slice/seatmap/lib/function.js
+            test ! -e /tmp/slice/seatmap/node_modules/jest
+            test ! -e /tmp/slice/seatmap/node_modules/@biomejs
           '

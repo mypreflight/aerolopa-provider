@@ -78,15 +78,18 @@ tags the version and drafts the GitHub release; it does not deploy.
 
 ## How the deployable is produced
 
-`src/` is the only place code is written. `npm run build` compiles it into
-`packages/aerolopa/seatmap/lib` and writes that package's `package.json` and `.include` — the layout DigitalOcean
-Functions requires, where the two directory names become the action path `aerolopa/seatmap`.
+All code lives in `packages/aerolopa/seatmap/src`. That path is not decoration: DigitalOcean Functions derives the
+action name from the package and function directories (`aerolopa/seatmap`), and the remote builder copies that single
+directory into an isolated workspace before running `build.sh`. Nothing above it exists at build time, which is why the
+package carries its own `tsconfig.json`, `package.json` and build script.
 
-That directory is generated but **committed**: App Platform builds the component from this repository, so it has to be
-in git. It contains no build step of its own — the platform simply zips `lib` and `package.json`. CI runs the build and
-fails on any diff under `packages/`, so it cannot drift from `src/`.
+`build.sh` runs `npm install --omit=dev` then `tsc`; `.include` ships `lib` and `package.json`. Only `typescript` and
+`@types/node` are declared as dependencies of the function package, so the platform build installs three packages and
+skips Jest entirely. No compiled output is committed — `packages/**/lib/` is git-ignored.
 
-Never edit anything under `packages/` by hand.
+CI reproduces the platform exactly: it copies the function directory to an empty path, deletes `lib` and
+`node_modules`, runs `build.sh` there and asserts `lib/function.js` exists. A change that only builds inside the full
+repository fails that step rather than failing a deploy.
 
 ## Local development
 
@@ -103,11 +106,14 @@ docker compose exec app npm run build
 docker compose exec app node -e "require('./packages/aerolopa/seatmap/lib/function.js').main({slug:'lh-32n'}).then(r => console.log(r.statusCode))"
 ```
 
+`AEROLOPA_API_HOST` points at the `aerolopa-mock` container locally, so neither the tests nor the dev server ever reach
+the real site.
+
 ## Changing the response contract
 
 The OpenAPI document is the contract, and `flight-tracker-api` generates its types from it.
 
-1. Edit `openapi.json` here.
+1. Edit `openapi.json` here — it documents the single `GET /aerolopa/seatmap` operation.
 2. Copy it into the backend at `src/core/provider/aerolopa/aerolopa.openapi.json`.
 3. Run `npm run aerolopa:types` there and commit the regenerated types.
 

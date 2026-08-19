@@ -40,7 +40,7 @@ export async function callsTo(path: string): Promise<number> {
 export async function restoreFixtures(): Promise<void> {
   const { readFileSync } = await import("node:fs");
   const { join } = await import("node:path");
-  const file = join(__dirname, "..", "..", "docker", "mock", "aerolopa.json");
+  const file = join(__dirname, "..", "..", "..", "..", "..", "docker", "mock", "aerolopa.json");
   const expectations = JSON.parse(readFileSync(file, "utf-8")) as unknown[];
 
   await reset();

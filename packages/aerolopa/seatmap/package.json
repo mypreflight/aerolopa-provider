@@ -1,14 +1,54 @@
 {
   "name": "aerolopa-seatmap",
-  "version": "1.0.0",
-  "description": "Fetches AeroLOPA seat maps and cabin configurations",
-  "main": "lib/function.js",
+  "version": "1.1.0",
+  "description": "AeroLOPA seat map fetcher, deployed as a DigitalOcean Function",
+  "author": "mypreflight",
   "license": "Unlicense",
+  "main": "lib/function.js",
   "scripts": {
-    "build": "tsc -p tsconfig.json"
+    "build": "./build.sh",
+    "start:dev": "TS_NODE_PROJECT=tsconfig.tests.json node --watch -r ts-node/register scripts/dev-server.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.tests.json --noEmit",
+    "lint": "biome check",
+    "lint:fix": "biome check --write",
+    "test": "jest",
+    "test:functional": "TS_NODE_PROJECT=tsconfig.tests.json cucumber-js --require-module ts-node/register/transpile-only --require 'features/_context/**/*.ts' --fail-fast",
+    "mock:emit": "TS_NODE_PROJECT=tsconfig.tests.json ts-node scripts/emit-mock.ts"
   },
-  "devDependencies": {
+  "dependencies": {
     "@types/node": "^24.0.0",
     "typescript": "^5.7.2"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.14",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.2.5",
+    "@biomejs/biome": "^2.3.0",
+    "@cucumber/cucumber": "^11.2.0",
+    "expect": "^29.7.0",
+    "ts-node": "^10.9.2"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "rootDir": ".",
+    "roots": [
+      "<rootDir>/src"
+    ],
+    "moduleFileExtensions": [
+      "ts",
+      "js",
+      "json"
+    ],
+    "testMatch": [
+      "**/*.spec.ts"
+    ],
+    "transform": {
+      "^.+\\.ts$": [
+        "ts-jest",
+        {
+          "tsconfig": "tsconfig.json"
+        }
+      ]
+    }
   }
 }

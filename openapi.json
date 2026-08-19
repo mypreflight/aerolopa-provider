@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "MyPreflight AeroLOPA provider",
-    "description": "Internal service returning AeroLOPA seat maps and cabin configurations.\n\nReachable only on the private App Platform network of the `mypreflight` app;\nit declares internal_ports and no http_port, so it is unauthenticated by design.",
+    "description": "DigitalOcean Function returning AeroLOPA seat maps and cabin configurations.\n\nDeployed as a functions component of the `mypreflight` App Platform app. Every request must carry the `X-Require-Whisk-Auth` header declared as `webSecure` in project.yml; the platform rejects the request before the function runs otherwise.",
     "version": "1.0.0",
     "license": {
       "name": "Unlicense",
@@ -11,34 +11,16 @@
   },
   "servers": [
     {
-      "url": "http://aerolopa-provider:3000",
-      "description": "App Platform private network"
+      "url": "https://<app-host>/aerolopa",
+      "description": "App Platform ingress route"
     },
     {
       "url": "http://localhost:3001",
-      "description": "Local development"
+      "description": "Local development server"
     }
   ],
   "paths": {
-    "/health": {
-      "get": {
-        "summary": "Liveness probe",
-        "operationId": "health",
-        "responses": {
-          "200": {
-            "description": "Service is up",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Health"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/seatmap": {
+    "/aerolopa/seatmap": {
       "get": {
         "summary": "Look up seat maps and cabin configurations",
         "description": "The operation is taken from `op`, or inferred: `slug` implies seatmap, `airline` with `aircraft` implies resolve.",
@@ -50,7 +32,11 @@
             "required": false,
             "schema": {
               "type": "string",
-              "enum": ["seatmap", "resolve", "configurations"]
+              "enum": [
+                "seatmap",
+                "resolve",
+                "configurations"
+              ]
             }
           },
           {
@@ -60,7 +46,9 @@
             "description": "Configuration slug, required for op=seatmap.",
             "schema": {
               "type": "string",
-              "examples": ["lh-32n"]
+              "examples": [
+                "lh-32n"
+              ]
             }
           },
           {
@@ -70,7 +58,9 @@
             "description": "Airline IATA code, required for op=resolve.",
             "schema": {
               "type": "string",
-              "examples": ["LO"]
+              "examples": [
+                "LO"
+              ]
             }
           },
           {
@@ -80,7 +70,9 @@
             "description": "Aircraft IATA type code, required for op=resolve.",
             "schema": {
               "type": "string",
-              "examples": ["7M8"]
+              "examples": [
+                "7M8"
+              ]
             }
           },
           {
@@ -125,18 +117,11 @@
               }
             }
           },
+          "401": {
+            "description": "Missing or wrong X-Require-Whisk-Auth header; rejected by the platform"
+          },
           "404": {
             "description": "No such configuration",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "405": {
-            "description": "Method other than GET",
             "content": {
               "application/json": {
                 "schema": {
@@ -173,11 +158,17 @@
     "schemas": {
       "Error": {
         "type": "object",
-        "required": ["error"],
+        "required": [
+          "error"
+        ],
         "properties": {
           "error": {
             "type": "object",
-            "required": ["code", "message", "status"],
+            "required": [
+              "code",
+              "message",
+              "status"
+            ],
             "properties": {
               "code": {
                 "type": "string",
@@ -203,22 +194,41 @@
       },
       "SeatComment": {
         "type": "object",
-        "required": ["slug", "comment", "sentiment", "severity"],
+        "required": [
+          "slug",
+          "comment",
+          "sentiment",
+          "severity"
+        ],
         "properties": {
           "slug": {
             "type": "string",
-            "examples": ["bathroom_door"]
+            "examples": [
+              "bathroom_door"
+            ]
           },
           "comment": {
             "type": "string"
           },
           "sentiment": {
             "type": "string",
-            "enum": ["good", "bad", "neutral"]
+            "enum": [
+              "good",
+              "bad",
+              "neutral"
+            ]
           },
           "severity": {
-            "type": ["string", "null"],
-            "enum": ["minor", "moderate", "major", null]
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "minor",
+              "moderate",
+              "major",
+              null
+            ]
           }
         }
       },
@@ -245,7 +255,9 @@
         "properties": {
           "designator": {
             "type": "string",
-            "examples": ["30A"]
+            "examples": [
+              "30A"
+            ]
           },
           "x": {
             "type": "number",
@@ -271,16 +283,31 @@
           },
           "cabin": {
             "type": "string",
-            "enum": ["first", "business", "premium_economy", "economy"],
+            "enum": [
+              "first",
+              "business",
+              "premium_economy",
+              "economy"
+            ],
             "description": "Commercial cabin of this seat. On a flexible cabin this splits one physical cabin, so it may disagree with cabins[]."
           },
           "rating": {
-            "type": ["string", "null"],
-            "enum": ["green", "yellow", "red", null]
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "green",
+              "yellow",
+              "red",
+              null
+            ]
           },
           "color": {
             "type": "string",
-            "examples": ["#f0c030"]
+            "examples": [
+              "#f0c030"
+            ]
           },
           "bookable": {
             "type": "boolean"
@@ -292,12 +319,24 @@
             "type": "boolean"
           },
           "windowStatus": {
-            "type": ["string", "null"],
-            "enum": ["great", "average", "poor", "none", null],
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "great",
+              "average",
+              "poor",
+              "none",
+              null
+            ],
             "description": "Null when the seat has no window position at all."
           },
           "seatProduct": {
-            "type": ["string", "null"]
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "comments": {
             "type": "array",
@@ -322,37 +361,65 @@
         "properties": {
           "code": {
             "type": "string",
-            "examples": ["M"]
+            "examples": [
+              "M"
+            ]
           },
           "name": {
             "type": "string",
-            "examples": ["Economy seats"]
+            "examples": [
+              "Economy seats"
+            ]
           },
           "seatCount": {
             "type": "integer"
           },
           "rows": {
-            "type": ["string", "null"],
-            "examples": ["1 to 32"]
+            "type": [
+              "string",
+              "null"
+            ],
+            "examples": [
+              "1 to 32"
+            ]
           },
           "pitch": {
-            "type": ["string", "null"],
-            "examples": ["29\" to 30\""]
+            "type": [
+              "string",
+              "null"
+            ],
+            "examples": [
+              "29\" to 30\""
+            ]
           },
           "width": {
-            "type": ["string", "null"]
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "recline": {
-            "type": ["string", "null"]
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "description": {
-            "type": ["string", "null"]
+            "type": [
+              "string",
+              "null"
+            ]
           }
         }
       },
       "Assets": {
         "type": "object",
-        "required": ["image", "imageNeutral", "svg", "seatRects"],
+        "required": [
+          "image",
+          "imageNeutral",
+          "svg",
+          "seatRects"
+        ],
         "properties": {
           "image": {
             "type": "string",
@@ -374,7 +441,10 @@
       },
       "Canvas": {
         "type": "object",
-        "required": ["width", "height"],
+        "required": [
+          "width",
+          "height"
+        ],
         "description": "Coordinate space that seat x/y/width/height are expressed in.",
         "properties": {
           "width": {
@@ -434,38 +504,54 @@
         "properties": {
           "slug": {
             "type": "string",
-            "examples": ["lh-32n"]
+            "examples": [
+              "lh-32n"
+            ]
           },
           "airlineIata": {
             "type": "string",
-            "examples": ["LH"]
+            "examples": [
+              "LH"
+            ]
           },
           "aircraftIata": {
             "type": "string",
-            "examples": ["32N"]
+            "examples": [
+              "32N"
+            ]
           },
           "aircraftType": {
             "type": "string",
-            "examples": ["Airbus A320-271N"]
+            "examples": [
+              "Airbus A320-271N"
+            ]
           },
           "aircraftTypeDisplayed": {
             "type": "string",
-            "examples": ["Airbus A320neo"]
+            "examples": [
+              "Airbus A320neo"
+            ]
           },
           "manufacturer": {
             "type": "string",
-            "examples": ["Airbus"]
+            "examples": [
+              "Airbus"
+            ]
           },
           "haulType": {
             "type": "string",
-            "examples": ["Short Haul"]
+            "examples": [
+              "Short Haul"
+            ]
           },
           "isDualDeck": {
             "type": "boolean"
           },
           "totalSeats": {
             "type": "integer",
-            "examples": [180]
+            "examples": [
+              180
+            ]
           },
           "lastUpdated": {
             "type": "string",
@@ -497,19 +583,29 @@
       },
       "Configuration": {
         "type": "object",
-        "required": ["slug", "airlineIata", "aircraftIata"],
+        "required": [
+          "slug",
+          "airlineIata",
+          "aircraftIata"
+        ],
         "properties": {
           "slug": {
             "type": "string",
-            "examples": ["lo-7m8-1"]
+            "examples": [
+              "lo-7m8-1"
+            ]
           },
           "airlineIata": {
             "type": "string",
-            "examples": ["LO"]
+            "examples": [
+              "LO"
+            ]
           },
           "aircraftIata": {
             "type": "string",
-            "examples": ["7M8"]
+            "examples": [
+              "7M8"
+            ]
           }
         }
       },
@@ -526,15 +622,21 @@
         "properties": {
           "airlineIata": {
             "type": "string",
-            "examples": ["LO"]
+            "examples": [
+              "LO"
+            ]
           },
           "aircraftIata": {
             "type": "string",
-            "examples": ["7M8"]
+            "examples": [
+              "7M8"
+            ]
           },
           "candidateCount": {
             "type": "integer",
-            "examples": [3]
+            "examples": [
+              3
+            ]
           },
           "ambiguous": {
             "type": "boolean",
@@ -557,7 +659,9 @@
       },
       "SeatMapResponse": {
         "type": "object",
-        "required": ["seatMap"],
+        "required": [
+          "seatMap"
+        ],
         "properties": {
           "seatMap": {
             "$ref": "#/components/schemas/SeatMap"
@@ -566,11 +670,16 @@
       },
       "ConfigurationIndex": {
         "type": "object",
-        "required": ["count", "configurations"],
+        "required": [
+          "count",
+          "configurations"
+        ],
         "properties": {
           "count": {
             "type": "integer",
-            "examples": [1599]
+            "examples": [
+              1599
+            ]
           },
           "configurations": {
             "type": "array",
@@ -579,17 +688,19 @@
             }
           }
         }
-      },
-      "Health": {
-        "type": "object",
-        "required": ["status"],
-        "properties": {
-          "status": {
-            "type": "string",
-            "enum": ["ok"]
-          }
-        }
+      }
+    },
+    "securitySchemes": {
+      "whiskAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Require-Whisk-Auth"
       }
     }
-  }
+  },
+  "security": [
+    {
+      "whiskAuth": []
+    }
+  ]
 }

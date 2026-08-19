@@ -1,6 +1,6 @@
 import { AfterAll, Before, Given, Then } from "@cucumber/cucumber";
 import expect from "expect";
-import { resetClient } from "../../packages/aerolopa/seatmap/src/function";
+import { resetClient } from "../../src/function";
 import { defaultSeats, htmlPayload, rscPayload, seatMapRecord, sitemapXml } from "../_helper/aerolopa.fixture";
 import { callsTo, reset, restoreFixtures, expect as stub } from "../_helper/mockserver";
 

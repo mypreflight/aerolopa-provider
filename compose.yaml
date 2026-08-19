@@ -3,11 +3,12 @@ services:
     build:
       context: .
       target: development
+    working_dir: /app/packages/aerolopa/seatmap
     env_file:
       - .env
     volumes:
       - .:/app
-      - ./node_modules:/app/node_modules
+      - ./node_modules:/app/packages/aerolopa/seatmap/node_modules
     ports:
       - '3001:3000'
     healthcheck:

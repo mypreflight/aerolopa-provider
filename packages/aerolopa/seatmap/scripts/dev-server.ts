@@ -1,5 +1,5 @@
 import { createServer } from "node:http";
-import { main } from "../packages/aerolopa/seatmap/src/function";
+import { main } from "../src/function";
 
 const PORT = Number(process.env.PORT ?? 3000);
 

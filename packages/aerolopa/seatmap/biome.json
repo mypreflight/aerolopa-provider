@@ -2,20 +2,19 @@
   "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
   "files": {
     "includes": [
-      "packages/aerolopa/seatmap/src/**/*",
+      "src/**/*",
       "features/**/*",
       "scripts/**/*",
       "*.json",
-      "*.js",
-      "!openapi.json",
-      "!docker/mock/aerolopa.json",
-      "!**/lib"
+      "!**/lib",
+      "!**/node_modules",
+      "!package-lock.json"
     ]
   },
   "vcs": {
-    "enabled": true,
+    "enabled": false,
     "clientKind": "git",
-    "useIgnoreFile": true
+    "useIgnoreFile": false
   },
   "formatter": {
     "enabled": true,

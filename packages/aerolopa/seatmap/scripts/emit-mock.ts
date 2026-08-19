@@ -20,7 +20,7 @@ const expectations = [
   ),
 ];
 
-const target = join(__dirname, "..", "docker", "mock", "aerolopa.json");
+const target = join(__dirname, "..", "..", "..", "..", "docker", "mock", "aerolopa.json");
 writeFileSync(target, `${JSON.stringify(expectations, null, 2)}\n`, "utf-8");
 
 console.log(`wrote ${target} (${expectations.length} expectations)`);
