@@ -1,5 +1,6 @@
 import type { AerolopaClient } from "./client";
 import { BadRequestError, ProviderError } from "./errors";
+import { describeError, Logger, stackOf } from "./logger";
 import type { AerolopaConfiguration, AerolopaSeatMap } from "./types";
 
 export type HandlerParams = {
@@ -27,6 +28,8 @@ export type ResolveResult = {
 const OPERATIONS = ["seatmap", "resolve", "configurations"] as const;
 
 type Operation = (typeof OPERATIONS)[number];
+
+const logger = new Logger("SeatmapHandler");
 
 function isTruthy(value: string | boolean | undefined): boolean {
   return value === true || value === "true" || value === "1";
@@ -103,18 +106,46 @@ async function configurationsOperation(client: AerolopaClient): Promise<HandlerR
   };
 }
 
+function describeRequest(operation: Operation | "unknown", params: HandlerParams): string {
+  const details = [
+    params.slug ? `slug=${params.slug}` : "",
+    params.airline ? `airline=${params.airline}` : "",
+    params.aircraft ? `aircraft=${params.aircraft}` : "",
+    isTruthy(params.includeSeatMaps) ? "includeSeatMaps=true" : "",
+  ].filter(Boolean);
+
+  return [`op=${operation}`, ...details].join(" ");
+}
+
+async function execute(client: AerolopaClient, operation: Operation, params: HandlerParams): Promise<HandlerResponse> {
+  switch (operation) {
+    case "seatmap":
+      return await seatMapOperation(client, params);
+    case "resolve":
+      return await resolveOperation(client, params);
+    case "configurations":
+      return await configurationsOperation(client);
+  }
+}
+
 export async function handleRequest(client: AerolopaClient, params: HandlerParams): Promise<HandlerResponse> {
+  const startedAt = Date.now();
+  let operation: Operation | "unknown" = "unknown";
+
   try {
-    switch (inferOperation(params)) {
-      case "seatmap":
-        return await seatMapOperation(client, params);
-      case "resolve":
-        return await resolveOperation(client, params);
-      case "configurations":
-        return await configurationsOperation(client);
-    }
+    operation = inferOperation(params);
+
+    const response = await execute(client, operation, params);
+    logger.log(`Served ${describeRequest(operation, params)} in ${Date.now() - startedAt}ms.`);
+
+    return response;
   } catch (error) {
     if (error instanceof ProviderError) {
+      logger.warn(
+        `Request ${describeRequest(operation, params)} failed after ${Date.now() - startedAt}ms ` +
+          `with ${error.status} ${error.code}: ${error.message}`,
+      );
+
       return {
         statusCode: error.status,
         body: {
@@ -126,6 +157,11 @@ export async function handleRequest(client: AerolopaClient, params: HandlerParam
         },
       };
     }
+
+    logger.error(
+      `Request ${describeRequest(operation, params)} crashed after ${Date.now() - startedAt}ms: ${describeError(error)}`,
+      stackOf(error),
+    );
 
     return {
       statusCode: 500,

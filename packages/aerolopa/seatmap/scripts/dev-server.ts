@@ -1,5 +1,8 @@
 import { createServer } from "node:http";
 import { main } from "../src/function";
+import { Logger } from "../src/logger";
+
+const logger = new Logger("SeatmapDevServer");
 
 const PORT = Number(process.env.PORT ?? 3000);
 
@@ -26,5 +29,5 @@ createServer((request, response) => {
       response.end('{"error":{"code":"INTERNAL_ERROR","status":500}}');
     });
 }).listen(PORT, () => {
-  console.log(`aerolopa-provider dev server on :${PORT}`);
+  logger.log(`Dev server listening on :${PORT}.`);
 });
