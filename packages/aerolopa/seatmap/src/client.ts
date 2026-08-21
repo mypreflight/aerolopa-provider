@@ -1,4 +1,5 @@
 import { AerolopaUnavailableError, SeatMapNotFoundError, SeatMapUnreadableError } from "./errors";
+import { describeError, Logger } from "./logger";
 import { parseConfigurationIndex } from "./parser/configuration-index.parser";
 import { decodeRscPayload, extractSeatMapRecord } from "./parser/rsc-payload.parser";
 import { type AerolopaConfiguration, type AerolopaSeatMap, transformSeatMap } from "./types";
@@ -23,6 +24,7 @@ export type AerolopaClientOptions = {
 };
 
 export class AerolopaClient {
+  private readonly logger = new Logger(AerolopaClient.name);
   private readonly baseUrl: string;
   private readonly userAgent: string;
   private readonly cache = new Map<string, { value: unknown; expiresAt: number }>();
@@ -63,6 +65,8 @@ export class AerolopaClient {
     const entry = this.cache.get(key);
 
     if (entry && entry.expiresAt > Date.now()) {
+      this.logger.debug(`Serving ${key} from cache.`);
+
       return entry.value as T;
     }
 
@@ -83,19 +87,29 @@ export class AerolopaClient {
   }
 
   private async request(url: string, headers: Record<string, string>, slug?: string): Promise<string> {
+    const startedAt = Date.now();
     const response = await this.fetchWithRetry(url, headers);
 
     if (response.status === 404 && slug) {
+      this.logger.debug(`AeroLOPA has no configuration ${slug}.`);
+
       throw new SeatMapNotFoundError(slug);
     }
 
     if (!response.ok) {
+      this.logger.warn(`AeroLOPA answered ${response.status} for ${url}.`);
+
       throw new AerolopaUnavailableError();
     }
 
     try {
-      return await response.text();
-    } catch {
+      const body = await response.text();
+      this.logger.debug(`Read ${body.length} bytes from ${url} in ${Date.now() - startedAt}ms.`);
+
+      return body;
+    } catch (error) {
+      this.logger.warn(`Could not read the AeroLOPA response from ${url}: ${describeError(error)}`);
+
       throw new AerolopaUnavailableError();
     }
   }
@@ -107,11 +121,19 @@ export class AerolopaClient {
           headers: { "User-Agent": this.userAgent, ...headers },
           signal: AbortSignal.timeout(TIMEOUT_MS),
         });
-      } catch {
+      } catch (error) {
         if (attempt === RETRIES) {
+          this.logger.error(`Could not reach ${url} in ${RETRIES + 1} attempts: ${describeError(error)}`);
+
           throw new AerolopaUnavailableError();
         }
-        await delay(BACKOFF_MS * 2 ** attempt);
+
+        const backoff = BACKOFF_MS * 2 ** attempt;
+        this.logger.warn(
+          `Attempt ${attempt + 1} to reach ${url} failed: ${describeError(error)}. Retrying in ${backoff}ms.`,
+        );
+
+        await delay(backoff);
       }
     }
 
