@@ -1,6 +1,6 @@
 <div align="center">
 
-# aerolopa-provider
+[![aerolopa-provider][banner]][homepage]
 
 The seat map functions of the [**MyPreflight**][homepage] platform. Fetch aircraft seat maps, cabin
 configurations and the layout index from [AeroLOPA][aerolopa], on demand, as a component of the platform's App Platform app.
@@ -221,6 +221,7 @@ not be used for real-world aviation operations. Seat map diagrams and cabin data
 [github-url]: https://github.com/oskarbarcz
 [web-badge]: https://img.shields.io/badge/barcz.me-4A5568?style=for-the-badge&logo=googlechrome&logoColor=white
 [web-url]: https://barcz.me
+[banner]: .github/image/banner.png
 [homepage]: https://mypreflight.io
 [aerolopa]: https://www.aerolopa.com
 [repo-api]: https://github.com/oskarbarcz/flight-tracker-api
