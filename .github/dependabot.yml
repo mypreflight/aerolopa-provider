@@ -1,0 +1,28 @@
+version: 2
+
+multi-ecosystem-groups:
+  dependencies:
+    schedule:
+      interval: daily
+
+updates:
+  - package-ecosystem: npm
+    directory: /packages/aerolopa/layouts
+    patterns: ['*']
+    multi-ecosystem-group: dependencies
+  - package-ecosystem: npm
+    directory: /packages/aerolopa/seatmap
+    patterns: ['*']
+    multi-ecosystem-group: dependencies
+  - package-ecosystem: github-actions
+    directory: /
+    patterns: ['*']
+    multi-ecosystem-group: dependencies
+  - package-ecosystem: docker
+    directory: /
+    patterns: ['*']
+    multi-ecosystem-group: dependencies
+  - package-ecosystem: docker-compose
+    directory: /
+    patterns: ['*']
+    multi-ecosystem-group: dependencies
