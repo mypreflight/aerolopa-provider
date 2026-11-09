@@ -6,3 +6,14 @@ test-data
 
 # build output — DigitalOcean compiles each function from packages/aerolopa/<function>/src
 packages/**/lib/
+
+dist/
+
+# Infrastructure
+.terraform/
+*.tfstate
+*.tfstate.*
+*_override.tf
+tfplan
+/dist.zip
+/lambda-out/
