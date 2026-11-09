@@ -15,4 +15,5 @@ dist/
 *.tfstate.*
 *_override.tf
 tfplan
-infra/build/
+/dist.zip
+/lambda-out/
