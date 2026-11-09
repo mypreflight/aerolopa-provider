@@ -1,6 +1,6 @@
 {
   "name": "aerolopa-seatmap",
-  "version": "1.4.3",
+  "version": "1.5.0",
   "description": "AeroLOPA seat map fetcher, deployed as a DigitalOcean Function",
   "author": "mypreflight",
   "license": "Unlicense",
