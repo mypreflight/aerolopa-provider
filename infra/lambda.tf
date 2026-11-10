@@ -13,7 +13,7 @@ resource "aws_lambda_function" "function" {
   role             = aws_iam_role.function.arn
   runtime          = "nodejs24.x"
   architectures    = ["arm64"]
-  handler          = "index.handler"
+  handler          = "lambda.handler"
   filename         = "${path.module}/../dist.zip"
   source_code_hash = filebase64sha256("${path.module}/../dist.zip")
   memory_size      = 512

@@ -2,8 +2,8 @@
 
 [![aerolopa-provider][banner]][homepage]
 
-The seat map functions of the [**MyPreflight**][homepage] platform. Fetch aircraft seat maps, cabin
-configurations and the layout index from [AeroLOPA][aerolopa], on demand, as a component of the platform's App Platform app.
+The seat map function of the [**MyPreflight**][homepage] platform. Fetches aircraft seat maps, cabin
+configurations and the layout index from [AeroLOPA][aerolopa], on demand, as an AWS Lambda behind a Function URL.
 
 </div>
 
@@ -13,7 +13,8 @@ configurations and the layout index from [AeroLOPA][aerolopa], on demand, as a c
 figures, checklists, procedures and data to perform your flight like a real pilots do. You can customize your
 experience, integrate with SimBrief and other tools. Check out our homepage at [mypreflight.io][homepage].
 
-**This module** is a pair of serverless functions that turn AeroLOPA cabin diagrams into data the platform can render:
+**This module** is a serverless function with two routes that turn AeroLOPA cabin diagrams into data the platform can
+render:
 
 - extracts per-seat geometry, ratings and commentary for around 1600 cabin configurations,
 - resolves an airline and aircraft type to the cabin configurations that match it,
@@ -40,8 +41,8 @@ companion in [flight-tracker-transponder-app][repo-transponder].
 [![Cucumber][cucumber-badge]][cucumber-url]
 [![Docker][docker-badge]][docker-url]
 
-No runtime dependencies at all — each function is the standard library plus compiled TypeScript, which keeps the
-deployed artifact small and the cold start immediate.
+No runtime dependencies at all — the function is the standard library plus TypeScript bundled into one file by
+esbuild, which keeps the deployed artifact small and the cold start immediate.
 
 ## Getting started
 
@@ -71,51 +72,44 @@ This app uses docker-based virtualization to run. To set up the project, follow 
    Packages will be installed automatically and the service starts in watch mode.
 
 4. Your project should be up and running. `docker compose` also starts an `aerolopa-mock` container, so the
-   functions answer without touching the real site. Each function gets its own port:
+   function answers without touching the real site. Both routes share one port and want the secret from `.env`:
 
    ```shell
-   curl "http://localhost:3001/?slug=lh-32n"   # seatmap
-   curl "http://localhost:3002/"               # layouts
+   curl -H "Authorization: Bearer $AEROLOPA_FUNCTION_SECRET" "http://localhost:3001/seatmap?slug=lh-32n"
+   curl -H "Authorization: Bearer $AEROLOPA_FUNCTION_SECRET" "http://localhost:3001/layouts"
    ```
 
 ### On-demand by design
 
-This is a functions component of the `mypreflight` App Platform app — the same app the backend runs in, deployed from
-this repository rather than as a separate serverless project. It scales to zero, costs nothing while nobody is asking
-for a seat map, and starts on the first request, which fits a lookup the backend caches for a day and therefore calls
-rarely.
+This is one AWS Lambda function, `nodejs24.x` on arm64, behind a Function URL. It scales to zero, costs nothing while
+nobody is asking for a seat map, and starts on the first request, which fits a lookup the backend caches for a day and
+therefore calls rarely.
 
 ```shell
-curl -H "X-Require-Whisk-Auth: $SECRET" \
-  "https://<app-host>/aerolopa/aerolopa/seatmap?slug=lh-359"
+URL=$(aws ssm get-parameter --name /mypreflight/aerolopa-provider/url --query Parameter.Value --output text)
+SECRET=$(aws ssm get-parameter --name /mypreflight/aerolopa-provider/secret --with-decryption \
+  --query Parameter.Value --output text)
 
-curl -H "X-Require-Whisk-Auth: $SECRET" \
-  "https://<app-host>/aerolopa/aerolopa/layouts"
+curl -H "Authorization: Bearer $SECRET" "$URL/seatmap?slug=lh-359"
+curl -H "Authorization: Bearer $SECRET" "$URL/layouts"
 ```
 
-Functions reach the network through the app's public ingress and cannot be placed on a private one — they support
-neither VPCs nor App Platform internal routing. The endpoint is therefore guarded by a shared secret, declared as
-`webSecure` in `project.yml`. Nothing internal is exposed: the function reads a public website and returns a seat map.
+The Function URL uses auth type `NONE`, so it is reachable from anywhere. The function therefore checks a shared
+secret itself, before it routes or reads anything: the bearer token must match `AEROLOPA_FUNCTION_SECRET`, which the
+stack generates. Nothing internal is exposed: the function reads a public website and returns a seat map.
 
-Each function is a self-contained package under `packages/aerolopa/`, with its own `package.json`, build and
-dependencies — `seatmap` and `layouts`. `src/function.ts` in each is the entry point DigitalOcean calls, and
-`scripts/dev-server.ts` beside it wraps that entry point in a throwaway HTTP server so `docker compose up` gives you
+The source lives in `src/`. `src/lambda.ts` is the entry point Lambda calls: it checks the secret and routes `/seatmap`
+and `/layouts` to their handlers in `src/seatmap/` and `src/layouts/`, which share one AeroLOPA client, cache and
+parsers. `scripts/dev-server.ts` wraps that entry point in a throwaway HTTP server so `docker compose up` gives you
 something to curl; it is never deployed.
-
-They are deployed together from one `project.yml` but scale, fail and cold-start independently. `layouts` deliberately
-carries its own slim copy of the fetch and sitemap-parsing code rather than importing from `seatmap`: DigitalOcean
-packages each function directory on its own, so a shared module would have to be vendored into both slices anyway.
 
 ### API documentation
 
-The contract is `openapi.json` in the repository root — `GET /aerolopa/seatmap` and `GET /aerolopa/layouts`, both
-requiring the `X-Require-Whisk-Auth` header. It is the source of truth: `flight-tracker-api` generates its client types
-from it rather than restating them.
+The contract is `openapi.json` in the repository root — `GET /seatmap` and `GET /layouts`, both requiring an
+`Authorization: Bearer` header. It is the source of truth: `flight-tracker-api` generates its client types from it
+rather than restating them.
 
-The functions take arguments, not paths — as query parameters over HTTP, or as the `args` object when invoked through
-the DigitalOcean API.
-
-`GET /aerolopa/seatmap`:
+Both routes take query parameters. `GET /seatmap`:
 
 | Arguments                                      | Result                                     |
 | ---------------------------------------------- | ------------------------------------------ |
@@ -124,7 +118,7 @@ the DigitalOcean API.
 | `airline=LO&aircraft=7M8&includeSeatMaps=true` | candidates and every matching seat map     |
 | `op=configurations`                            | the full configuration index               |
 
-`GET /aerolopa/layouts` takes no arguments and answers with the id of every published layout, the airline and aircraft
+`GET /layouts` takes no arguments and answers with the id of every published layout, the airline and aircraft
 IATA codes parsed out of it, and the trailing discriminator that separates several layouts of the same pair:
 
 ```json
@@ -139,10 +133,11 @@ IATA codes parsed out of it, and the trailing discriminator that separates sever
 
 The whole index comes from one sitemap read, so the call is cheap — around 115 kB and a single upstream request, cached
 for a day. Nothing richer is available at that price: aircraft names, cabins and seat counts live inside each layout's
-own payload, so reaching them means one request per layout and belongs in `/aerolopa/seatmap`.
+own payload, so reaching them means one request per layout and belongs in `/seatmap`.
 
-Errors answer `{ "error": { "code", "message", "status" } }` with a matching status: `400` bad arguments, `404` unknown
-configuration, `502` AeroLOPA unreachable or unparseable, `500` anything else.
+Errors answer `{ "error": { "code", "message", "status" } }` with a matching status: `400` bad arguments, `401` a
+missing or wrong secret, `404` unknown configuration or path, `502` AeroLOPA unreachable or unparseable, `500` anything
+else.
 
 ### Configurations are candidates, not answers
 
@@ -154,47 +149,33 @@ a list and sets `ambiguous`; choosing between them needs per-airframe knowledge 
 
 This project uses [semantic versioning](https://semver.org/spec/v2.0.0.html).
 
-**Every function carries the same version.** The repository is released as one unit — App Platform rebuilds the whole
-component on a push to `main`, and one git tag covers both functions — so `seatmap` and `layouts` are versioned
-together rather than each on its own line. Bump both, in the same commit:
+Both routes ship as one package with one version. Bump it in every pull request:
 
 ```shell
-npm version 1.2.0 --no-git-tag-version --prefix packages/aerolopa/seatmap
-npm version 1.2.0 --no-git-tag-version --prefix packages/aerolopa/layouts
+docker compose exec app npm version 2.1.0 --no-git-tag-version
 ```
 
-`integrity` fails the build if they disagree — it compares `package.json` and `package-lock.json` across every function
-directory, so a bumped manifest with a stale lock file is caught too. The version it agrees on is the one the release
-workflow tags.
+`integrity` fails the build if the version is already taken, and the release workflow tags it when `main` moves.
 
 This project has configured continuous integration and continuous deployment pipelines. It uses GitHub Actions to
-automatically build, test and deploy the app to the DigitalOcean. You can find the configuration in `.github/workflows`
-directory.
+automatically build, test and deploy the app to AWS. You can find the configuration in `.github/workflows` directory.
 
-First deployment needs the component adding to the app spec and a shared secret — see the
-[deployment guide][docs-deployment].
+The infrastructure is an OpenTofu stack in `infra/`: the Lambda function, its Function URL, its role, a log group and
+the generated secret. `./zip.sh` builds the `export` stage of the `Dockerfile` into `dist.zip`, which holds the single
+bundled `lambda.js`. A pull request gets a plan from `dflook/tofu-plan`; a merge to `main` tags the version and applies
+the stack with `dflook/tofu-apply` in the `production` environment. The stack exports the Function URL and the secret
+at the SSM parameters `/mypreflight/aerolopa-provider/url` and `/mypreflight/aerolopa-provider/secret`, where the API
+reads them. Logs go to CloudWatch under `/aws/lambda/aerolopa-provider`.
 
-App Platform rebuilds the component whenever `main` moves, so the workflow here only tags the version and drafts the
-GitHub release. There is no image and no registry: App Platform builds from this repository using `project.yml`.
-
-Everything runs in Docker. Each function has its own service, named after it — `seatmap` and `layouts` — and its
-own copy of the scripts, so run them per service:
+Everything runs in Docker, in the `app` service:
 
 ```shell
-docker compose exec seatmap npm test
-docker compose exec seatmap npm run test:functional
-docker compose exec seatmap npm run typecheck
-docker compose exec seatmap npm run lint
-docker compose exec seatmap npm run build
-
-docker compose exec layouts npm test
-docker compose exec layouts npm run test:functional
-docker compose exec layouts npm run typecheck
-docker compose exec layouts npm run lint
-docker compose exec layouts npm run build
+docker compose exec app npm test
+docker compose exec app npm run test:functional
+docker compose exec app npm run typecheck
+docker compose exec app npm run lint
+docker compose exec app npm run bundle
 ```
-
-The `integrity` workflow runs both as a matrix, so a change to one function cannot be signed off by the other's tests.
 
 ## Contact
 
@@ -239,7 +220,6 @@ not be used for real-world aviation operations. Seat map diagrams and cabin data
 [ts-url]: https://www.typescriptlang.org
 [docker-badge]: https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white
 [docker-url]: https://www.docker.com
-[docs-deployment]: docs/DEPLOYMENT.md
 [biome-badge]: https://img.shields.io/badge/Biome-60A5FA?style=for-the-badge&logo=biome&logoColor=white
 [biome-url]: https://biomejs.dev
 [cucumber-badge]: https://img.shields.io/badge/Cucumber-23D96C?style=for-the-badge&logo=cucumber&logoColor=white

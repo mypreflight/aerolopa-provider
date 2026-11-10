@@ -1,8 +1,8 @@
 # aerolopa-provider
 
-The seat map functions: seat geometry, cabin configurations and the layout index from AeroLOPA, for the MyPreflight API.
+The seat map function: seat geometry, cabin configurations and the layout index from AeroLOPA, for the MyPreflight API.
 
-Last reviewed: 2026-10-20
+Last reviewed: 2026-11-10
 
 This repo is part of MyPreflight. The knowledge base lives in the product repo, [mypreflight/product](https://github.com/mypreflight/product). It is the primary source of truth for product decisions, standards and architecture. Read it by URL before working here:
 
@@ -18,8 +18,9 @@ If this file or the code contradicts the knowledge base, the knowledge base take
 Keep this short. Anything shared between repos belongs in the knowledge base.
 
 - Run locally: `cp .env.dist .env`, then `docker compose up -d --build`. Compose also starts an AeroLOPA mock, so nothing touches the real site.
-- Test: per function (`seatmap`, `layouts`): `docker compose exec <function> npm run lint`, `npm run typecheck`, `npm test` and the functional tests.
-- Deploy: every function carries the same version. Bump both with `npm version <x.y.z> --no-git-tag-version --prefix packages/aerolopa/<function>`. Merging to `main` tags the version; App Platform builds from `project.yml`.
+- Test: `docker compose exec app npm run lint`, then `npm run typecheck`, `npm test` and `npm run test:functional` the same way.
+- Layout: one package at the root. `src/lambda.ts` is the Lambda entry: it checks the `Authorization: Bearer` secret and routes `/seatmap` and `/layouts` to `src/seatmap/` and `src/layouts/`, which share the client, errors, types and parsers.
+- Deploy: bump `version` in `package.json` with `docker compose exec app npm version <x.y.z> --no-git-tag-version`. Merging to `main` tags the version, builds `dist.zip` with `./zip.sh` and applies the OpenTofu stack in `infra/` to AWS. The stack exports the Function URL and secret at SSM `/mypreflight/aerolopa-provider/url` and `/secret`.
 - The API vendors `openapi.json` and mirrors it in hand-written types. Change the contract here and in the API together.
 
 When your change alters product behaviour, also open a PR to the knowledge base updating the matching file.

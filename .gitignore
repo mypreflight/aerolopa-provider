@@ -4,10 +4,7 @@ node_modules/
 .env
 test-data
 
-# build output — DigitalOcean compiles each function from packages/aerolopa/<function>/src
-packages/**/lib/
-
-dist/
+/dist/
 
 # Infrastructure
 .terraform/
