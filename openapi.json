@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "MyPreflight AeroLOPA provider",
-    "description": "DigitalOcean Functions returning AeroLOPA seat maps, cabin configurations, and the index of published layouts.\n\nDeployed as a functions component of the `mypreflight` App Platform app. Every request must carry the `X-Require-Whisk-Auth` header declared as `webSecure` in project.yml; the platform rejects the request before the function runs otherwise.",
-    "version": "1.0.0",
+    "description": "An AWS Lambda function returning AeroLOPA seat maps, cabin configurations, and the index of published layouts.\n\nServed from one Lambda Function URL that routes `/seatmap` and `/layouts`. Every request must carry the shared function secret as `Authorization: Bearer <secret>`; the function answers 401 before reading anything otherwise.",
+    "version": "2.0.0",
     "license": {
       "name": "Unlicense",
       "url": "https://opensource.org/licenses/Unlicense"
@@ -11,8 +11,14 @@
   },
   "servers": [
     {
-      "url": "https://<app-host>/aerolopa",
-      "description": "App Platform ingress route"
+      "url": "https://{urlId}.lambda-url.eu-central-1.on.aws",
+      "description": "The Lambda Function URL, published at the SSM parameter /mypreflight/aerolopa-provider/url",
+      "variables": {
+        "urlId": {
+          "default": "function-url-id",
+          "description": "The Function URL's generated identifier"
+        }
+      }
     },
     {
       "url": "http://localhost:3001",
@@ -20,7 +26,7 @@
     }
   ],
   "paths": {
-    "/aerolopa/seatmap": {
+    "/seatmap": {
       "get": {
         "summary": "Look up seat maps and cabin configurations",
         "description": "The operation is taken from `op`, or inferred: `slug` implies seatmap, `airline` with `aircraft` implies resolve.",
@@ -118,7 +124,14 @@
             }
           },
           "401": {
-            "description": "Missing or wrong X-Require-Whisk-Auth header; rejected by the platform"
+            "description": "Missing or wrong bearer token, answered by the function before it reads anything",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           },
           "404": {
             "description": "No such configuration",
@@ -151,24 +164,12 @@
             }
           }
         }
-      },
-      "servers": [
-        {
-          "url": "http://localhost:3001",
-          "description": "Local development server for the seatmap function"
-        }
-      ]
+      }
     },
-    "/aerolopa/layouts": {
-      "servers": [
-        {
-          "url": "http://localhost:3002",
-          "description": "Local development server for the layouts function"
-        }
-      ],
+    "/layouts": {
       "get": {
         "summary": "List every published cabin layout",
-        "description": "Returns the identifier of every cabin layout AeroLOPA publishes, with the airline and aircraft IATA codes parsed out of it and the trailing discriminator that separates several layouts of the same airline and type.\n\nThe whole index comes from a single sitemap read, so the call is cheap and takes no parameters. Nothing here requires fetching a seat map: for cabins, seats, or aircraft names, follow up with `/aerolopa/seatmap?slug=<id>`.\n\nThe index is cached in the function instance for 24 hours.",
+        "description": "Returns the identifier of every cabin layout AeroLOPA publishes, with the airline and aircraft IATA codes parsed out of it and the trailing discriminator that separates several layouts of the same airline and type.\n\nThe whole index comes from a single sitemap read, so the call is cheap and takes no parameters. Nothing here requires fetching a seat map: for cabins, seats, or aircraft names, follow up with `/seatmap?slug=<id>`.\n\nThe index is cached in the function instance for 24 hours.",
         "operationId": "listLayouts",
         "responses": {
           "200": {
@@ -182,7 +183,14 @@
             }
           },
           "401": {
-            "description": "Missing or wrong X-Require-Whisk-Auth header; rejected by the platform"
+            "description": "Missing or wrong bearer token, answered by the function before it reads anything",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           },
           "500": {
             "description": "Unexpected failure",
@@ -231,6 +239,7 @@
                   "SEAT_MAP_NOT_FOUND",
                   "AEROLOPA_UNAVAILABLE",
                   "SEAT_MAP_UNREADABLE",
+                  "UNAUTHORIZED",
                   "NOT_FOUND",
                   "METHOD_NOT_ALLOWED",
                   "INTERNAL_ERROR"
@@ -775,7 +784,7 @@
         "properties": {
           "id": {
             "type": "string",
-            "description": "The AeroLOPA slug; pass it as `slug` to /aerolopa/seatmap.",
+            "description": "The AeroLOPA slug; pass it as `slug` to /seatmap.",
             "examples": [
               "lo-7m8-1"
             ]
@@ -806,16 +815,16 @@
       }
     },
     "securitySchemes": {
-      "whiskAuth": {
-        "type": "apiKey",
-        "in": "header",
-        "name": "X-Require-Whisk-Auth"
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "The shared function secret, published at the SSM parameter /mypreflight/aerolopa-provider/secret"
       }
     }
   },
   "security": [
     {
-      "whiskAuth": []
+      "bearerAuth": []
     }
   ]
 }
