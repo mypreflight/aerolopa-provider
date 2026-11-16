@@ -1,6 +1,6 @@
 {
   "name": "aerolopa-provider",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "private": true,
   "description": "AeroLOPA seat maps, cabin configurations and the layout index, served from one AWS Lambda Function URL",
   "author": "mypreflight",

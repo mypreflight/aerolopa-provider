@@ -125,3 +125,14 @@ export function defaultSeats(): Record<string, unknown> {
     "02A": seat("02A", { bookable: false, blocked: true, crewRest: true }),
   };
 }
+
+export function positionlessSeats(): Record<string, unknown> {
+  const geometry = ["x", "y", "w", "h", "rot", "reverse"];
+
+  return Object.fromEntries(
+    Object.entries(defaultSeats()).map(([designator, entry]) => [
+      designator,
+      Object.fromEntries(Object.entries(entry as object).filter(([key]) => !geometry.includes(key))),
+    ]),
+  );
+}

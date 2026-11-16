@@ -1,4 +1,10 @@
-import { type AerolopaSeatApiInput, type AerolopaSeatMapApiInput, transformSeat, transformSeatMap } from "./types";
+import {
+  type AerolopaSeatApiInput,
+  type AerolopaSeatMapApiInput,
+  hasSeatGeometry,
+  transformSeat,
+  transformSeatMap,
+} from "./types";
 
 const seat: AerolopaSeatApiInput = {
   x: 177.5,
@@ -115,5 +121,25 @@ describe("transformSeatMap", () => {
 
     expect(map.cabins).toHaveLength(1);
     expect(map.seatCounts).toEqual({ business: 48, economy: 132, total: 180 });
+  });
+});
+
+describe("hasSeatGeometry", () => {
+  const positionless = Object.fromEntries(
+    Object.entries(seat).filter(([key]) => !["x", "y", "w", "h", "rot", "reverse"].includes(key)),
+  ) as unknown as AerolopaSeatApiInput;
+
+  it("accepts a seat map whose seats all have a position", () => {
+    expect(hasSeatGeometry(seatMap)).toBe(true);
+  });
+
+  it("refuses a seat map whose seats have no position", () => {
+    expect(hasSeatGeometry({ ...seatMap, seats: { "30A": positionless } })).toBe(false);
+  });
+
+  it("refuses a seat map where one seat lacks a coordinate", () => {
+    const seats = { "30A": seat, "30B": { ...seat, x: Number.NaN } };
+
+    expect(hasSeatGeometry({ ...seatMap, seats })).toBe(false);
   });
 });

@@ -1,7 +1,14 @@
 import { AfterAll, Before, Given, Then } from "@cucumber/cucumber";
 import expect from "expect";
 import { resetClient } from "../../src/lambda";
-import { defaultSeats, htmlPayload, rscPayload, seatMapRecord, sitemapXml } from "../_helper/aerolopa.fixture";
+import {
+  defaultSeats,
+  htmlPayload,
+  positionlessSeats,
+  rscPayload,
+  seatMapRecord,
+  sitemapXml,
+} from "../_helper/aerolopa.fixture";
 import { callsTo, reset, restoreFixtures, expect as stub } from "../_helper/mockserver";
 
 const SITEMAP_PATH = "/sitemap.xml";
@@ -25,6 +32,14 @@ Given("AeroLOPA serves the seat map {string}", async (slug: string) => {
     path: `/${slug}`,
     status: 200,
     body: rscPayload(seatMapRecord(slug, defaultSeats())),
+  });
+});
+
+Given("AeroLOPA serves the seat map {string} without seat positions", async (slug: string) => {
+  await stub({
+    path: `/${slug}`,
+    status: 200,
+    body: rscPayload(seatMapRecord(slug, positionlessSeats())),
   });
 });
 

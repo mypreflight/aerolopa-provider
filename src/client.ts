@@ -3,7 +3,13 @@ import { describeError, Logger } from "./logger";
 import { parseConfigurationIndex } from "./parser/configuration-index.parser";
 import { parseLayoutIndex } from "./parser/layout-index.parser";
 import { decodeRscPayload, extractSeatMapRecord } from "./parser/rsc-payload.parser";
-import { type AerolopaConfiguration, type AerolopaLayout, type AerolopaSeatMap, transformSeatMap } from "./types";
+import {
+  type AerolopaConfiguration,
+  type AerolopaLayout,
+  type AerolopaSeatMap,
+  hasSeatGeometry,
+  transformSeatMap,
+} from "./types";
 
 const CACHE_TTL_MS = 86_400_000;
 
@@ -42,6 +48,12 @@ export class AerolopaClient {
       const record = extractSeatMapRecord(decodeRscPayload(await this.fetchSeatMapPayload(slug)));
 
       if (!record) {
+        throw new SeatMapUnreadableError(slug);
+      }
+
+      if (!hasSeatGeometry(record)) {
+        this.logger.warn(`AeroLOPA sent seat map ${slug} with seats that have no position.`);
+
         throw new SeatMapUnreadableError(slug);
       }
 
