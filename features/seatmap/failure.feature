@@ -48,6 +48,21 @@ Feature: Reporting failures honestly
       }
       """
 
+  Scenario: A seat map whose seats have no position answers bad gateway
+    Given AeroLOPA serves the seat map "lh-32n" without seat positions
+    When I request "/seatmap?slug=lh-32n"
+    Then the response status should be 502
+    And the response body should contain:
+      """
+      {
+        "error": {
+          "code": "SEAT_MAP_UNREADABLE",
+          "message": "Seat map payload for configuration lh-32n could not be read.",
+          "status": 502
+        }
+      }
+      """
+
   Scenario: An outage while indexing configurations answers bad gateway
     Given AeroLOPA is unavailable for the configuration index
     When I request "/seatmap?airline=LH&aircraft=32N"

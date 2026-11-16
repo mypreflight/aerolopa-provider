@@ -158,6 +158,16 @@ function transformComment(input: AerolopaSeatCommentApiInput): AerolopaSeatComme
   };
 }
 
+function isCoordinate(value: unknown): boolean {
+  return typeof value === "number" && Number.isFinite(value);
+}
+
+export function hasSeatGeometry(input: AerolopaSeatMapApiInput): boolean {
+  return Object.values(input.seats).every(
+    (seat) => [seat.x, seat.y, seat.w, seat.h, seat.rot].every(isCoordinate) && typeof seat.reverse === "boolean",
+  );
+}
+
 export function transformSeat(designator: string, input: AerolopaSeatApiInput): AerolopaSeat {
   return {
     designator,
